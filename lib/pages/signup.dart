@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tracker/theme/stchBtn.dart';
 
 class SignUp extends StatelessWidget {
   const SignUp({super.key});
@@ -6,23 +7,13 @@ class SignUp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Colors.transparent,
-      //   elevation: 0,
-      //   leading: IconButton(
-      //     onPressed: () {
-      //       Navigator.pushNamed(context, '/login');
-      //     },
-      //     icon: Icon(Icons.arrow_back),
-      //   ),
-      // ),
       body: SafeArea(
-        child: Align(
-          alignment: Alignment.topLeft,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: Center(
+        child: Stack(
+          children: [
+            const Positioned(top: 10, right: 10, child: ThemeSwitchButton()),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(15.0),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -31,7 +22,7 @@ class SignUp extends StatelessWidget {
                         'Hello!!',
                         style: TextStyle(
                           fontSize: 25,
-                          color: Colors.white,
+                          color: Colors.blue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -39,11 +30,11 @@ class SignUp extends StatelessWidget {
                         'Get Started...',
                         style: TextStyle(
                           fontSize: 15,
-                          color: Colors.white,
+                          color: Colors.blue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       TextField(
                         decoration: InputDecoration(
                           labelText: 'Email ID',
@@ -53,7 +44,7 @@ class SignUp extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       TextField(
                         obscureText: true,
                         decoration: InputDecoration(
@@ -64,24 +55,24 @@ class SignUp extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Align(
                         alignment: Alignment.centerRight,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            const Text(
                               'Have Account?',
                               style: TextStyle(
                                 fontSize: 15,
-                                color: Colors.white,
+                                color: Colors.blue,
                               ),
                             ),
                             TextButton(
                               onPressed: () {
                                 Navigator.pushNamed(context, '/login');
                               },
-                              child: Text(
+                              child: const Text(
                                 'Log-In',
                                 style: TextStyle(
                                   fontSize: 15,
@@ -102,9 +93,9 @@ class SignUp extends StatelessWidget {
                           },
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.black,
-                            backgroundColor: Colors.white,
+                            backgroundColor: Colors.blue,
                           ),
-                          child: Text('Sign-Up'),
+                          child: const Text('Sign-Up'),
                         ),
                       ),
                     ],
@@ -112,7 +103,7 @@ class SignUp extends StatelessWidget {
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

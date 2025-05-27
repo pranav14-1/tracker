@@ -24,23 +24,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        // appBar: AppBar(
-        //   automaticallyImplyLeading: false,
-        //   title: Text(
-        //     'TRACKER',
-        //     style: TextStyle(
-        //       color: Colors.white,
-        //       fontSize: 25,
-        //       decoration: TextDecoration.underline,
-        //       decorationColor: Colors.blue,
-        //       decorationThickness: 2,
-        //     ),
-        //   ),
-        //   elevation: 1,
-        //   shadowColor: Colors.grey[400],
-        //   centerTitle: true,
-        //   // backgroundColor: Colors.white,
-        // ),
         body: pages[selectedIndex],
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,

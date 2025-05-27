@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:tracker/features/dialog.dart';
-import 'package:tracker/features/tasks.dart';
+import 'package:tracker/features/dialogBox.dart';
+import 'package:tracker/features/taskslist.dart';
+import 'package:tracker/theme/stchBtn.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 String avatar(dynamic value) =>
     'https://api.dicebear.com/7.x/adventurer/png?seed=$value';
@@ -18,6 +20,7 @@ class _HomeAtivityState extends State<HomeAtivity> {
   int currentIndex = 0;
   int currentUserIndex = 2;
   bool checked = false;
+  final _controller = TextEditingController();
 
   List activity = [
     ["Activity App Flutter", false],
@@ -33,11 +36,48 @@ class _HomeAtivityState extends State<HomeAtivity> {
     });
   }
 
+  void saveTask() {
+    setState(() {
+      activity.add([_controller.text, false]);
+      Navigator.of(context).pop();
+    });
+  }
+
   void newTask() {
+    _controller.clear();
     showDialog(
       context: context,
       builder: (context) {
-        return TaskDialog();
+        return TaskDialog(
+          controller: _controller,
+          onAdd: saveTask,
+          onCancel: () => Navigator.of(context).pop(),
+        );
+      },
+    );
+  }
+
+  void deleteTask(int index) {
+    setState(() {
+      activity.removeAt(index);
+    });
+  }
+
+  void editTask(int index) {
+    _controller.text = activity[index][0];
+    showDialog(
+      context: context,
+      builder: (context) {
+        return TaskDialog(
+          controller: _controller,
+          onAdd: () {
+            setState(() {
+              activity[index][0] = _controller.text;
+            });
+            Navigator.of(context).pop();
+          },
+          onCancel: () => Navigator.of(context).pop(),
+        );
       },
     );
   }
@@ -50,7 +90,7 @@ class _HomeAtivityState extends State<HomeAtivity> {
         title: Text(
           'TRACKER',
           style: TextStyle(
-            color: Colors.white,
+            color: Colors.blue,
             fontSize: 25,
             decoration: TextDecoration.underline,
             decorationColor: Colors.blue,
@@ -60,7 +100,8 @@ class _HomeAtivityState extends State<HomeAtivity> {
         // elevation: 1,
         // shadowColor: Colors.grey,
         centerTitle: true,
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        actions: [ThemeSwitchButton()],
       ),
       body: SafeArea(
         child: Column(
@@ -136,10 +177,54 @@ class _HomeAtivityState extends State<HomeAtivity> {
               child: ListView.builder(
                 itemCount: activity.length,
                 itemBuilder: (context, index) {
-                  return Tasks(
-                    taskname: activity[index][0],
-                    taskcompleted: activity[index][1],
-                    onChanged: (value) => boxChanged(value, index),
+                  return Slidable(
+                    key: ValueKey(activity[index][0]),
+                    endActionPane: ActionPane(
+                      motion: BehindMotion(),
+                      children: [
+                        CustomSlidableAction(
+                          onPressed: (context) => editTask(index),
+                          backgroundColor: Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.edit,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        CustomSlidableAction(
+                          onPressed: (context) => deleteTask(index),
+                          backgroundColor: Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.delete,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    child: Tasks(
+                      taskname: activity[index][0],
+                      taskcompleted: activity[index][1],
+                      onChanged: (value) => boxChanged(value, index),
+                    ),
                   );
                 },
               ),
@@ -153,7 +238,7 @@ class _HomeAtivityState extends State<HomeAtivity> {
         foregroundColor: Colors.blue,
         child: const Icon(Icons.add),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }

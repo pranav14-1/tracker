@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
 class TaskDialog extends StatelessWidget {
-  const TaskDialog({super.key});
+  final controller;
+  VoidCallback onAdd;
+  VoidCallback onCancel;
+
+  TaskDialog({
+    super.key,
+    required this.controller,
+    required this.onAdd,
+    required this.onCancel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,6 +21,7 @@ class TaskDialog extends StatelessWidget {
         child: Column(
           children: [
             TextField(
+              controller: controller,
               decoration: InputDecoration(
                 hintText: 'New Task',
                 hintStyle: TextStyle(color: Colors.black),
@@ -30,7 +40,7 @@ class TaskDialog extends StatelessWidget {
                 SizedBox(
                   width: 100,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: onCancel,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black,
@@ -42,7 +52,7 @@ class TaskDialog extends StatelessWidget {
                 SizedBox(
                   width: 100,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: onAdd,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black,
