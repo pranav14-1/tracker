@@ -6,12 +6,41 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Center(
-            child: Text('profile page'),
+      appBar: AppBar(
+        title: Text(
+          'PROFILE',
+          style: TextStyle(
+            color: Colors.blue,
+            fontSize: 25,
+            decoration: TextDecoration.underline,
+            decorationColor: Colors.blue,
+            decorationThickness: 2,
           ),
-        )),
+        ),
+        centerTitle: true,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            ListTile(
+              title: Text('Sign Out'),
+              onTap: () {
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+            ),
+          ],
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Text('User Profile Content')],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

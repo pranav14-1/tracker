@@ -1,8 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:tracker/theme/stchBtn.dart';
 
-class SignUp extends StatelessWidget {
+class SignUp extends StatefulWidget {
   const SignUp({super.key});
+
+  @override
+  State<SignUp> createState() => _SignUpState();
+}
+
+class _SignUpState extends State<SignUp> {
+  TextEditingController email = TextEditingController();
+  TextEditingController password = TextEditingController();
+  bool _obscurePassword = true;
+  FocusNode _passwordNode = FocusNode();
+  bool _isPasswordFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordNode.addListener(() {
+      setState(() {
+        _isPasswordFocused = _passwordNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    _passwordNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,14 +75,31 @@ class SignUp extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       TextField(
-                        obscureText: true,
+                        controller: password,
+                        focusNode: _passwordNode,
                         decoration: InputDecoration(
                           labelText: 'Password',
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
+                          suffixIcon:
+                              _isPasswordFocused
+                                  ? IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                    ),
+                                  )
+                                  : null,
                         ),
+                        obscureText: _obscurePassword,
                       ),
                       const SizedBox(height: 10),
                       Align(

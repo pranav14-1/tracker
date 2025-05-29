@@ -7,11 +7,15 @@ class Leaderborad extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Center(
-            child: Text('leaderboard page'),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Text('Leaderboard')],
+            ),
           ),
-        )),
+        ),
+      ),
     );
   }
 }

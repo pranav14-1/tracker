@@ -1,8 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:tracker/theme/stchBtn.dart';
 
-class LogIn extends StatelessWidget {
+class LogIn extends StatefulWidget {
   const LogIn({super.key});
+
+  @override
+  State<LogIn> createState() => _LogInState();
+}
+
+class _LogInState extends State<LogIn> {
+  TextEditingController email = TextEditingController();
+  TextEditingController password = TextEditingController();
+  bool _obscurePassword = true;
+  FocusNode _passwordNode = FocusNode();
+  bool _isPasswordFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordNode.addListener(() {
+      setState(() {
+        _isPasswordFocused = _passwordNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    _passwordNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +65,9 @@ class LogIn extends StatelessWidget {
                       ),
                       SizedBox(height: 20),
                       TextField(
+                        controller: email,
                         decoration: InputDecoration(
-                          labelText: 'Username',
+                          labelText: 'Email',
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
@@ -46,14 +76,31 @@ class LogIn extends StatelessWidget {
                       ),
                       SizedBox(height: 20),
                       TextField(
+                        controller: password,
+                        focusNode: _passwordNode,
                         decoration: InputDecoration(
                           labelText: 'Password',
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
+                          suffixIcon:
+                              _isPasswordFocused
+                                  ? IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                    ),
+                                  )
+                                  : null,
                         ),
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                       ),
                       Align(
                         alignment: Alignment.centerRight,
