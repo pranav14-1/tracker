@@ -1,7 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  LogOut() async {
+    await FirebaseAuth.instance.signOut();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +33,7 @@ class ProfilePage extends StatelessWidget {
       drawer: Drawer(
         child: ListView(
           children: [
-            ListTile(
-              title: Text('Sign Out'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-            ),
+            ListTile(title: Text('Sign Out'), onTap: (() => LogOut())),
           ],
         ),
       ),

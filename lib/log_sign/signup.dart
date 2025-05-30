@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:tracker/features/redirect.dart';
 import 'package:tracker/theme/stchBtn.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class LogIn extends StatefulWidget {
-  const LogIn({super.key});
+class SignUp extends StatefulWidget {
+  const SignUp({super.key});
 
   @override
-  State<LogIn> createState() => _LogInState();
+  State<SignUp> createState() => _SignUpState();
 }
 
-class _LogInState extends State<LogIn> {
+class _SignUpState extends State<SignUp> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
   bool _obscurePassword = true;
@@ -33,6 +36,14 @@ class _LogInState extends State<LogIn> {
     super.dispose();
   }
 
+  Goto() async {
+    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email.text,
+      password: password.text,
+    );
+    Get.offAll(Redirect());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,31 +61,31 @@ class _LogInState extends State<LogIn> {
                       Text(
                         'Hello!!',
                         style: TextStyle(
-                          color: Colors.blue,
                           fontSize: 25,
+                          color: Colors.blue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        'Welcome Back...',
+                        'Get Started...',
                         style: TextStyle(
-                          color: Colors.blue,
                           fontSize: 15,
+                          color: Colors.blue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       TextField(
                         controller: email,
                         decoration: InputDecoration(
-                          labelText: 'Email',
+                          labelText: 'Email ID',
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       TextField(
                         controller: password,
                         focusNode: _passwordNode,
@@ -102,115 +113,45 @@ class _LogInState extends State<LogIn> {
                         ),
                         obscureText: _obscurePassword,
                       ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
-                              decorationColor: Colors.blue,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 120,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/home');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.black,
-                          ),
-                          child: Text(
-                            'Log-In',
-                            style: TextStyle(color: Colors.black),
-                          ),
-                        ),
-                      ),
-                      Divider(thickness: 2, height: 80),
-                      Text(
-                        'Alternative Log-in',
-                        style: TextStyle(fontSize: 15),
-                      ),
-                      SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Google',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                            SizedBox(width: 10),
-                            Image.asset(
-                              'assets/images/g_logo.png',
-                              height: 20,
-                              width: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Instagram',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                            SizedBox(width: 10),
-                            Image.asset(
-                              'assets/images/ig_logo.png',
-                              height: 20,
-                              width: 20,
-                            ),
-                          ],
-                        ),
-                      ),
+                      const SizedBox(height: 10),
                       Align(
                         alignment: Alignment.centerRight,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              'No Account?',
+                            const Text(
+                              'Have Account?',
                               style: TextStyle(
-                                color: Colors.blue,
                                 fontSize: 15,
+                                color: Colors.blue,
                               ),
                             ),
                             TextButton(
                               onPressed: () {
-                                Navigator.pushReplacementNamed(
-                                  context,
-                                  '/signup',
-                                );
+                                Navigator.pushNamed(context, '/login');
                               },
-                              child: Text(
-                                'Sign-Up',
+                              child: const Text(
+                                'Log-In',
                                 style: TextStyle(
-                                  color: Colors.blue,
                                   fontSize: 15,
+                                  color: Colors.blue,
                                   decoration: TextDecoration.underline,
                                   decorationColor: Colors.blue,
                                 ),
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: ElevatedButton(
+                          onPressed: (() => Goto()),
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.black,
+                            backgroundColor: Colors.blue,
+                          ),
+                          child: const Text('Sign-Up'),
                         ),
                       ),
                     ],
