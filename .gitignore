@@ -43,3 +43,34 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+android/.gradle/
+android/app/build/
+
+# Linux
+linux/generated_plugin_registrant.cc
+linux/generated_plugin_registrant.h
+linux/generated_plugins.cmake
+
+# macOS
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Windows
+windows/generated_plugin_registrant.cc
+windows/generated_plugin_registrant.h
+windows/generated_plugins.cmake
+
+
+ios/Pods/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Runner.xcworkspace/
+.packages
+
+
+.vscode/
+
+
+ios/Flutter/ephemeral/
+macos/Flutter/ephemeral/
+windows/flutter/ephemeral/
