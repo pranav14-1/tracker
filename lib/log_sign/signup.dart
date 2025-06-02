@@ -16,19 +16,9 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController email = TextEditingController();
   final TextEditingController password = TextEditingController();
   final FocusNode _passwordNode = FocusNode();
+  final TextEditingController retypePassword = TextEditingController();
+  final FocusNode _retypePasswordNode = FocusNode();
 
-  bool _obscurePassword = true;
-  bool _isPasswordFocused = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _passwordNode.addListener(() {
-      setState(() {
-        _isPasswordFocused = _passwordNode.hasFocus;
-      });
-    });
-  }
 
   @override
   void dispose() {
@@ -39,11 +29,22 @@ class _SignUpState extends State<SignUp> {
   }
 
   Future<void> Goto() async {
-    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+    if(passwordConfirmed()){
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: email.text,
       password: password.text,
-    );
+      );
+    }
     Get.offAll(Redirect());
+  }
+
+  bool passwordConfirmed(){
+    if(password.text.trim() == retypePassword.text.trim()){
+      return true;
+    }
+    else{
+      return false;
+    }
   }
 
   @override
@@ -100,12 +101,14 @@ class _SignUpState extends State<SignUp> {
                       PasswordLogin(
                         password: password,
                         passwordNode: _passwordNode,
+                        labelledText: 'Password',
                       ),
                       const SizedBox(height: 20),
-                      // Password Field
+                      // Re-type Password Field
                       PasswordLogin(
-                        password: password,
-                        passwordNode: _passwordNode,
+                        password: retypePassword,
+                        passwordNode: _retypePasswordNode,
+                        labelledText: 'Re-type Password',
                       ),
                       const SizedBox(height: 10),
 

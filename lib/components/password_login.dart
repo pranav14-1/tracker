@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class PasswordLogin extends StatefulWidget {
   final TextEditingController password;
   final FocusNode passwordNode;
+  final String labelledText;
 
   const PasswordLogin({
     super.key,
     required this.password,
     required this.passwordNode,
+    required this.labelledText,
   });
 
   @override
@@ -43,7 +45,7 @@ class _PasswordLoginState extends State<PasswordLogin> {
       focusNode: widget.passwordNode,
       obscureText: _obscurePassword,
       decoration: InputDecoration(
-        labelText: 'Password',
+        labelText: widget.labelledText,
         filled: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
