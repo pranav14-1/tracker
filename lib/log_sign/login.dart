@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/utils.dart';
@@ -14,10 +13,11 @@ class LogIn extends StatefulWidget {
 }
 
 class _LogInState extends State<LogIn> {
-  TextEditingController email = TextEditingController();
-  TextEditingController password = TextEditingController();
+  final TextEditingController email = TextEditingController();
+  final TextEditingController password = TextEditingController();
+  final FocusNode _passwordNode = FocusNode();
+
   bool _obscurePassword = true;
-  FocusNode _passwordNode = FocusNode();
   bool _isPasswordFocused = false;
 
   @override
@@ -38,7 +38,7 @@ class _LogInState extends State<LogIn> {
     super.dispose();
   }
 
-  Goto() async {
+  Future<void> Goto() async {
     await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email.text,
       password: password.text,
@@ -51,7 +51,11 @@ class _LogInState extends State<LogIn> {
       body: SafeArea(
         child: Stack(
           children: [
-            const Positioned(top: 10, right: 10, child: ThemeSwitchButton()),
+            const Positioned(
+              top: 10,
+              right: 10,
+              child: ThemeSwitchButton(),
+            ),
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(15.0),
@@ -59,6 +63,7 @@ class _LogInState extends State<LogIn> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Greeting
                       Text(
                         'Hello!!',
                         style: TextStyle(
@@ -75,7 +80,9 @@ class _LogInState extends State<LogIn> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
+
+                      // Email Field
                       TextField(
                         controller: email,
                         decoration: InputDecoration(
@@ -86,39 +93,42 @@ class _LogInState extends State<LogIn> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
+
+                      // Password Field
                       TextField(
                         controller: password,
                         focusNode: _passwordNode,
+                        obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           labelText: 'Password',
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          suffixIcon:
-                              _isPasswordFocused
-                                  ? IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                  )
-                                  : null,
+                          suffixIcon: _isPasswordFocused
+                              ? IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                )
+                              : null,
                         ),
-                        obscureText: _obscurePassword,
                       ),
+
+                      // Forgot Password
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: (() => Get.to(ForgotPassword())),
-                          child: Text(
+                          onPressed: () => Get.to(ForgotPassword()),
+                          child: const Text(
                             'Forgot Password?',
                             style: TextStyle(
                               color: Colors.blue,
@@ -128,26 +138,27 @@ class _LogInState extends State<LogIn> {
                           ),
                         ),
                       ),
+
+                      // Log-In Button
                       SizedBox(
                         width: 120,
                         child: ElevatedButton(
-                          onPressed: (() => Goto()),
+                          onPressed: Goto,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
                             foregroundColor: Colors.black,
                           ),
-                          child: Text(
+                          child: const Text(
                             'Log-In',
                             style: TextStyle(color: Colors.black),
                           ),
                         ),
                       ),
-                      Divider(thickness: 2, height: 80),
-                      Text(
-                        'Alternative Log-in',
-                        style: TextStyle(fontSize: 15),
-                      ),
-                      SizedBox(height: 10),
+
+                      const Divider(thickness: 2, height: 80),
+                      const SizedBox(height: 10),
+
+                      // Google Login Button
                       ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
@@ -156,20 +167,22 @@ class _LogInState extends State<LogIn> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'Google',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                            SizedBox(width: 10),
                             Image.asset(
                               'assets/images/g_logo.png',
                               height: 20,
                               width: 20,
                             ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Continue with Google',
+                              style: TextStyle(color: Colors.black),
+                            ),
                           ],
                         ),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
+
+                      // Instagram Login Button
                       ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
@@ -178,25 +191,27 @@ class _LogInState extends State<LogIn> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'Instagram',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                            SizedBox(width: 10),
                             Image.asset(
                               'assets/images/ig_logo.png',
                               height: 20,
                               width: 20,
                             ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Continue with Instagram',
+                              style: TextStyle(color: Colors.black),
+                            ),
                           ],
                         ),
                       ),
+
+                      // Sign-Up Navigation
                       Align(
                         alignment: Alignment.centerRight,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            const Text(
                               'No Account?',
                               style: TextStyle(
                                 color: Colors.blue,
@@ -210,7 +225,7 @@ class _LogInState extends State<LogIn> {
                                   '/signup',
                                 );
                               },
-                              child: Text(
+                              child: const Text(
                                 'Sign-Up',
                                 style: TextStyle(
                                   color: Colors.blue,

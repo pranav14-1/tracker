@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tracker/components/password_login.dart';
 import 'package:tracker/features/redirect.dart';
 import 'package:tracker/theme/stchBtn.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,10 +13,11 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
-  TextEditingController email = TextEditingController();
-  TextEditingController password = TextEditingController();
+  final TextEditingController email = TextEditingController();
+  final TextEditingController password = TextEditingController();
+  final FocusNode _passwordNode = FocusNode();
+
   bool _obscurePassword = true;
-  FocusNode _passwordNode = FocusNode();
   bool _isPasswordFocused = false;
 
   @override
@@ -36,7 +38,7 @@ class _SignUpState extends State<SignUp> {
     super.dispose();
   }
 
-  Goto() async {
+  Future<void> Goto() async {
     await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: email.text,
       password: password.text,
@@ -50,7 +52,11 @@ class _SignUpState extends State<SignUp> {
       body: SafeArea(
         child: Stack(
           children: [
-            const Positioned(top: 10, right: 10, child: ThemeSwitchButton()),
+            const Positioned(
+              top: 10,
+              right: 10,
+              child: ThemeSwitchButton(),
+            ),
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(15.0),
@@ -58,6 +64,7 @@ class _SignUpState extends State<SignUp> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Greeting
                       Text(
                         'Hello!!',
                         style: TextStyle(
@@ -75,6 +82,8 @@ class _SignUpState extends State<SignUp> {
                         ),
                       ),
                       const SizedBox(height: 20),
+
+                      // Email Field
                       TextField(
                         controller: email,
                         decoration: InputDecoration(
@@ -86,34 +95,21 @@ class _SignUpState extends State<SignUp> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      TextField(
-                        controller: password,
-                        focusNode: _passwordNode,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          suffixIcon:
-                              _isPasswordFocused
-                                  ? IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                  )
-                                  : null,
-                        ),
-                        obscureText: _obscurePassword,
+
+                      // Password Field
+                      PasswordLogin(
+                        password: password,
+                        passwordNode: _passwordNode,
+                      ),
+                      const SizedBox(height: 20),
+                      // Password Field
+                      PasswordLogin(
+                        password: password,
+                        passwordNode: _passwordNode,
                       ),
                       const SizedBox(height: 10),
+
+                      // Navigation to Login
                       Align(
                         alignment: Alignment.centerRight,
                         child: Row(
@@ -143,10 +139,12 @@ class _SignUpState extends State<SignUp> {
                           ],
                         ),
                       ),
+
+                      // Sign-Up Button
                       SizedBox(
                         width: 120,
                         child: ElevatedButton(
-                          onPressed: (() => Goto()),
+                          onPressed: Goto,
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.black,
                             backgroundColor: Colors.blue,
