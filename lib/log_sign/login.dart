@@ -39,22 +39,22 @@ class _LogInState extends State<LogIn> {
     super.dispose();
   }
 
-String getFireBasedErrorMessage(String code) {
-  switch (code) {
-    case 'invalid-credential':
-    case 'invalid-authentication':
-    case 'INVALID_LOGIN_CREDENTIALS':
-      return 'Invalid email or password. Please try again.';
-    case 'invalid-email':
-      return 'The email address is badly formatted.';
-    case 'user-disabled':
-      return 'This user account has been disabled. Please contact support.';
-    case 'too-many-requests':
-      return 'Too many attempts. Please try again later.';
-    default:
-      return 'Authentication failed. Please try again.';
+  String getFireBasedErrorMessage(String code) {
+    switch (code) {
+      case 'invalid-credential':
+      case 'invalid-authentication':
+      case 'INVALID_LOGIN_CREDENTIALS':
+        return 'Invalid email or password. Please try again.';
+      case 'invalid-email':
+        return 'The email address is badly formatted.';
+      case 'user-disabled':
+        return 'This user account has been disabled. Please contact support.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      default:
+        return 'Authentication failed. Please try again.';
+    }
   }
-}
 
 
   Future<void> Goto() async {

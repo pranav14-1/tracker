@@ -12,6 +12,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   LogOut() async {
     await FirebaseAuth.instance.signOut();
+    Navigator.pushNamed(context, '/login');
   }
 
   @override
