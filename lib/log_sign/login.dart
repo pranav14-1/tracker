@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/utils.dart';
+import 'package:tracker/components/dialog_box.dart';
 import 'package:tracker/log_sign/forgot.dart';
 import 'package:tracker/theme/stchBtn.dart';
 
@@ -38,11 +39,44 @@ class _LogInState extends State<LogIn> {
     super.dispose();
   }
 
+String getFireBasedErrorMessage(String code) {
+  switch (code) {
+    case 'invalid-credential':
+    case 'invalid-authentication':
+    case 'INVALID_LOGIN_CREDENTIALS':
+      return 'Invalid email or password. Please try again.';
+    case 'invalid-email':
+      return 'The email address is badly formatted.';
+    case 'user-disabled':
+      return 'This user account has been disabled. Please contact support.';
+    case 'too-many-requests':
+      return 'Too many attempts. Please try again later.';
+    default:
+      return 'Authentication failed. Please try again.';
+  }
+}
+
+
   Future<void> Goto() async {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: email.text,
-      password: password.text,
-    );
+    try{
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email.text,
+        password: password.text,
+      );
+      Get.offAllNamed('/home');
+    } catch (e) {
+      String errorMessage = 'An unknown error occurred';
+        if (e is FirebaseAuthException) {
+          errorMessage = getFireBasedErrorMessage(e.code);
+        } else {
+          errorMessage = e.toString();
+        }
+        if(password.text == '') errorMessage = "Please enter the password";
+        showDialog(
+          context: context,
+          builder: (context) => DialogBox(message: errorMessage),
+        );
+    }
   }
 
   @override
