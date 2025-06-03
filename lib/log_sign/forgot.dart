@@ -33,9 +33,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   Reset() async {
     try{
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email.text);
-      showDialog(context: context, builder: (context){
+      await showDialog(context: context, builder: (context){
         return DialogBox(message: 'Email has been sent, please check your mail',);
       });
+      Navigator.pushNamed(context, '/login');
     } catch (e) {
       String errorMessage = "An unknown error has occured";
       if(e is FirebaseAuthException){
