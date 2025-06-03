@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tracker/components/password_login.dart';
 import 'package:tracker/features/redirect.dart';
+import 'package:tracker/pages/navbarsetup.dart';
 import 'package:tracker/theme/stchBtn.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import '../components/dialog_box.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -27,15 +30,38 @@ class _SignUpState extends State<SignUp> {
     _passwordNode.dispose();
     super.dispose();
   }
+  
+
 
   Future<void> Goto() async {
     if(passwordConfirmed()){
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: email.text,
-      password: password.text,
-      );
+      try{
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email.text,
+        password: password.text,
+        );
+        Get.toNamed('/home');
+      }
+      catch (e) {
+        String errorMessage = 'An unknown error occurred';
+        if (e is FirebaseAuthException) {
+          errorMessage = e.message ?? 'An unknown error occurred';
+        } else {
+          errorMessage = e.toString();
+        }
+        showDialog(
+          context: context,
+          builder: (context) => DialogBox(message: errorMessage),
+        );
+      }
     }
-    Get.offAll(Redirect());
+    else{
+      showDialog(context:  context
+      , builder: (context) {
+        return DialogBox(message: 'Passwords do no match in both fields');
+      });
+    }
+    // Get.offAll(Redirect());
   }
 
   bool passwordConfirmed(){
