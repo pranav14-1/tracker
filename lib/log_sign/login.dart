@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/utils.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:tracker/components/dialog_box.dart';
 import 'package:tracker/log_sign/forgot.dart';
 import 'package:tracker/theme/stchBtn.dart';
@@ -20,6 +21,30 @@ class _LogInState extends State<LogIn> {
 
   bool _obscurePassword = true;
   bool _isPasswordFocused = false;
+
+  Future<void> googleLogin() async {
+  try {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) return; // user cancelled login
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+    await FirebaseAuth.instance.signInWithCredential(credential);
+    // Navigate after successful login
+    Get.offAllNamed('/home');
+  } catch (e) {
+    showDialog(
+      context: context,
+      builder: (context) => DialogBox(
+        message: "Google Sign-In failed: ${e.toString()}",
+      ),
+    );
+  }
+}
+
 
   @override
   void initState() {
@@ -58,24 +83,24 @@ class _LogInState extends State<LogIn> {
 
 
   Future<void> Goto() async {
-    try{
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.text,
         password: password.text,
       );
       Get.offAllNamed('/home');
     } catch (e) {
       String errorMessage = 'An unknown error occurred';
-        if (e is FirebaseAuthException) {
-          errorMessage = getFireBasedErrorMessage(e.code);
-        } else {
-          errorMessage = e.toString();
-        }
-        if(password.text == '') errorMessage = "Please enter the password";
-        showDialog(
-          context: context,
-          builder: (context) => DialogBox(message: errorMessage),
-        );
+      if (e is FirebaseAuthException) {
+        errorMessage = getFireBasedErrorMessage(e.code);
+      } else {
+        errorMessage = e.toString();
+      }
+      if (password.text == '') errorMessage = "Please enter the password";
+      showDialog(
+        context: context,
+        builder: (context) => DialogBox(message: errorMessage),
+      );
     }
   }
 
@@ -85,11 +110,7 @@ class _LogInState extends State<LogIn> {
       body: SafeArea(
         child: Stack(
           children: [
-            const Positioned(
-              top: 10,
-              right: 10,
-              child: ThemeSwitchButton(),
-            ),
+            const Positioned(top: 10, right: 10, child: ThemeSwitchButton()),
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(15.0),
@@ -140,20 +161,21 @@ class _LogInState extends State<LogIn> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          suffixIcon: _isPasswordFocused
-                              ? IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                  ),
-                                )
-                              : null,
+                          suffixIcon:
+                              _isPasswordFocused
+                                  ? IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                    ),
+                                  )
+                                  : null,
                         ),
                       ),
 
@@ -194,7 +216,7 @@ class _LogInState extends State<LogIn> {
 
                       // Google Login Button
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: (()=>googleLogin()),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                         ),
