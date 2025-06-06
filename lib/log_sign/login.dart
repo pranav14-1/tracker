@@ -5,7 +5,7 @@ import 'package:get/utils.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:tracker/components/dialog_box.dart';
 import 'package:tracker/log_sign/forgot.dart';
-import 'package:tracker/theme/stchBtn.dart';
+import 'package:tracker/theme/switchButton.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -23,28 +23,30 @@ class _LogInState extends State<LogIn> {
   bool _isPasswordFocused = false;
 
   Future<void> googleLogin() async {
-  try {
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-    if (googleUser == null) return; // user cancelled login
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-    await FirebaseAuth.instance.signInWithCredential(credential);
-    // Navigate after successful login
-    Get.offAllNamed('/home');
-  } catch (e) {
-    showDialog(
-      context: context,
-      builder: (context) => DialogBox(
-        message: "Google Sign-In failed: ${e.toString()}",
-      ),
-    );
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return; // user cancelled login
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      // Navigate after successful login
+      Get.offAllNamed(
+        '/home',
+        arguments: FirebaseAuth.instance.currentUser!.uid,
+      );
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder:
+            (context) =>
+                DialogBox(message: "Google Sign-In failed: ${e.toString()}"),
+      );
+    }
   }
-}
-
 
   @override
   void initState() {
@@ -81,14 +83,16 @@ class _LogInState extends State<LogIn> {
     }
   }
 
-
   Future<void> Goto() async {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.text,
         password: password.text,
       );
-      Get.offAllNamed('/home');
+      Get.offAllNamed(
+        '/home',
+        arguments: FirebaseAuth.instance.currentUser!.uid,
+      );
     } catch (e) {
       String errorMessage = 'An unknown error occurred';
       if (e is FirebaseAuthException) {
@@ -216,7 +220,7 @@ class _LogInState extends State<LogIn> {
 
                       // Google Login Button
                       ElevatedButton(
-                        onPressed: (()=>googleLogin()),
+                        onPressed: (() => googleLogin()),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                         ),
@@ -248,13 +252,13 @@ class _LogInState extends State<LogIn> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.asset(
-                              'assets/images/ig_logo.png',
+                              'assets/images/phone.png',
                               height: 20,
                               width: 20,
                             ),
                             const SizedBox(width: 10),
                             const Text(
-                              'Continue with Instagram',
+                              'Continue with Phone Number',
                               style: TextStyle(color: Colors.black),
                             ),
                           ],

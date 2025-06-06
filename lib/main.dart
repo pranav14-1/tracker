@@ -5,6 +5,7 @@ import 'package:tracker/features/redirect.dart';
 import 'package:tracker/log_sign/login.dart';
 import 'package:tracker/pages/navbarsetup.dart';
 import 'package:tracker/log_sign/signup.dart';
+import 'package:tracker/isar_db/task_db.dart';
 // import 'package:tracker/theme/darkMode.dart';
 // import 'package:tracker/theme/lightMode.dart';
 import 'package:tracker/theme/themeSwitch.dart';
@@ -14,9 +15,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeSwitch(),
-      child: const MyApp(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => TaskDB()),
+        ChangeNotifierProvider(create: (context) => ThemeSwitch()),
+      ],
+      child: MyApp(),
     ),
   );
 }

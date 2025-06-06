@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:tracker/components/password_login.dart';
 import 'package:tracker/features/redirect.dart';
 import 'package:tracker/pages/navbarsetup.dart';
-import 'package:tracker/theme/stchBtn.dart';
+import 'package:tracker/theme/switchButton.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../components/dialog_box.dart';
@@ -22,7 +22,6 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController retypePassword = TextEditingController();
   final FocusNode _retypePasswordNode = FocusNode();
 
-
   @override
   void dispose() {
     email.dispose();
@@ -30,19 +29,16 @@ class _SignUpState extends State<SignUp> {
     _passwordNode.dispose();
     super.dispose();
   }
-  
-
 
   Future<void> Goto() async {
-    if(passwordConfirmed()){
-      try{
+    if (passwordConfirmed()) {
+      try {
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email.text,
-        password: password.text,
+          email: email.text,
+          password: password.text,
         );
-        Get.toNamed('/home');
-      }
-      catch (e) {
+        Get.toNamed('/home', arguments: FirebaseAuth.instance.currentUser!.uid);
+      } catch (e) {
         String errorMessage = 'An unknown error occurred';
         if (e is FirebaseAuthException) {
           errorMessage = e.message ?? 'An unknown error occurred';
@@ -54,21 +50,21 @@ class _SignUpState extends State<SignUp> {
           builder: (context) => DialogBox(message: errorMessage),
         );
       }
-    }
-    else{
-      showDialog(context:  context
-      , builder: (context) {
-        return DialogBox(message: 'Passwords do no match in both fields');
-      });
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return DialogBox(message: 'Passwords do no match in both fields');
+        },
+      );
     }
     // Get.offAll(Redirect());
   }
 
-  bool passwordConfirmed(){
-    if(password.text.trim() == retypePassword.text.trim()){
+  bool passwordConfirmed() {
+    if (password.text.trim() == retypePassword.text.trim()) {
       return true;
-    }
-    else{
+    } else {
       return false;
     }
   }
@@ -79,11 +75,7 @@ class _SignUpState extends State<SignUp> {
       body: SafeArea(
         child: Stack(
           children: [
-            const Positioned(
-              top: 10,
-              right: 10,
-              child: ThemeSwitchButton(),
-            ),
+            const Positioned(top: 10, right: 10, child: ThemeSwitchButton()),
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(15.0),
