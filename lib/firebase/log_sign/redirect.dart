@@ -2,7 +2,7 @@
 //if no data->log in
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:tracker/log_sign/login.dart';
+import 'package:tracker/firebase/log_sign/login.dart';
 import 'package:tracker/pages/navbarsetup.dart';
 
 class Redirect extends StatefulWidget {

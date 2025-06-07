@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tracker/components/password_login.dart';
-import 'package:tracker/features/redirect.dart';
-import 'package:tracker/pages/navbarsetup.dart';
 import 'package:tracker/theme/switchButton.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
-import '../components/dialog_box.dart';
+import 'package:tracker/firebase/log_sign/auth.dart';
+import '../../components/dialog_box.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -27,45 +24,33 @@ class _SignUpState extends State<SignUp> {
     email.dispose();
     password.dispose();
     _passwordNode.dispose();
+    retypePassword.dispose();
+    _retypePasswordNode.dispose();
     super.dispose();
+  }
+
+  bool passwordConfirmed() {
+    return password.text.trim() == retypePassword.text.trim();
   }
 
   Future<void> Goto() async {
     if (passwordConfirmed()) {
       try {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: email.text,
-          password: password.text,
-        );
-        Get.toNamed('/home', arguments: FirebaseAuth.instance.currentUser!.uid);
+        await AuthService.signUpWithEmail(email.text.trim(), password.text.trim());
+        Get.toNamed('/home');
       } catch (e) {
-        String errorMessage = 'An unknown error occurred';
-        if (e is FirebaseAuthException) {
-          errorMessage = e.message ?? 'An unknown error occurred';
-        } else {
-          errorMessage = e.toString();
-        }
         showDialog(
           context: context,
-          builder: (context) => DialogBox(message: errorMessage),
+          builder: (context) => DialogBox(message: e.toString()),
         );
       }
     } else {
       showDialog(
         context: context,
         builder: (context) {
-          return DialogBox(message: 'Passwords do no match in both fields');
+          return DialogBox(message: 'Passwords do not match in both fields');
         },
       );
-    }
-    // Get.offAll(Redirect());
-  }
-
-  bool passwordConfirmed() {
-    if (password.text.trim() == retypePassword.text.trim()) {
-      return true;
-    } else {
-      return false;
     }
   }
 
@@ -84,7 +69,7 @@ class _SignUpState extends State<SignUp> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Greeting
-                      Text(
+                      const Text(
                         'Hello!!',
                         style: TextStyle(
                           fontSize: 25,
@@ -92,7 +77,7 @@ class _SignUpState extends State<SignUp> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
+                      const Text(
                         'Get Started...',
                         style: TextStyle(
                           fontSize: 15,
@@ -122,6 +107,7 @@ class _SignUpState extends State<SignUp> {
                         labelledText: 'Password',
                       ),
                       const SizedBox(height: 20),
+
                       // Re-type Password Field
                       PasswordLogin(
                         password: retypePassword,

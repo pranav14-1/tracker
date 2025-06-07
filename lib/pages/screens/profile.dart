@@ -1,35 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tracker/firebase/log_sign/auth.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
-  Future<void> LogOut() async {
-  try {
-    // Disconnect Google account if signed in
-    final GoogleSignIn googleSignIn = GoogleSignIn();
-    if (await googleSignIn.isSignedIn()) {
-      await googleSignIn.disconnect(); // Removes cached account
-      await googleSignIn.signOut();
-    }
-    await FirebaseAuth.instance.signOut();
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Logout failed: $e')),
-    );
-  }
-}
-
-
-  @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -42,23 +22,33 @@ class _ProfilePageState extends State<ProfilePage> {
             decorationThickness: 2,
           ),
         ),
-        centerTitle: true,
       ),
-      drawer: Drawer(
-        child: ListView(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(title: Text('Sign Out'), onTap: (() => LogOut())),
-          ],
-        ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [Text('User Profile Content')],
+            Text(
+              'Current User:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-          ),
+            SizedBox(height: 5),
+            Text(
+              user?.email ?? 'No email found',
+              style: TextStyle(fontSize: 18, color: Colors.blue),
+            ),
+            SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () async {
+                await AuthService.logout();
+                Get.offAllNamed('/login');
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              child: const Text(
+                'Log Out',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
         ),
       ),
     );
