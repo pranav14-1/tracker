@@ -34,6 +34,7 @@ class _HomeAtivityState extends State<HomeAtivity> {
   Future<void> loadTasks() async {
     await TaskDB.init();
     final tasks = await TaskDB.getTasks();
+    if (!mounted) return;
     setState(() {
       activity = tasks;
     });
@@ -41,7 +42,7 @@ class _HomeAtivityState extends State<HomeAtivity> {
 
   void boxChanged(bool? value, int index) async {
     final task = activity[index];
-    await TaskDB.updateTaskCompletion(task.id!, value ?? false);
+    await TaskDB.updateTaskCompletion(task.id, value ?? false);
     setState(() {
       activity[index].completed = value ?? false;
     });

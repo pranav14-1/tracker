@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tracker/pages/screens/community.dart';
 import 'package:tracker/pages/screens/home_ativity.dart';
-import 'package:tracker/pages/screens/leaderborad.dart';
 import 'package:tracker/pages/screens/profile.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,13 +11,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int selectedIndex = 0;
-  final List<Widget> pages = [
-    HomeAtivity(),
-    Leaderborad(),
-    CommunityPage(),
-    ProfilePage(),
-  ];
+  int selectedIndex = 1;
+  final List<Widget> pages = [CommunityPage(), HomeAtivity(), ProfilePage()];
 
   @override
   Widget build(BuildContext context) {
@@ -29,23 +23,19 @@ class _HomePageState extends State<HomePage> {
           type: BottomNavigationBarType.fixed,
           currentIndex: selectedIndex,
           onTap: (index) async {
-            await Future.delayed(Duration(milliseconds: 250));
+            await Future.delayed(Duration(milliseconds: 200));
             setState(() {
               selectedIndex = index;
             });
           },
           items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: 'home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.leaderboard_rounded),
-              label: 'leaderboard',
-            ),
-            BottomNavigationBarItem(
               icon: Icon(Icons.people_alt_rounded),
               label: 'community',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              label: 'home',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_rounded),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tracker/isar_db/task.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TaskDB extends ChangeNotifier {
   static late Isar isar;
@@ -18,16 +19,19 @@ class TaskDB extends ChangeNotifier {
 
   // Load all tasks
   static Future<List<Task>> getTasks() async {
-    return await isar.tasks.where().findAll();
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return[];
+
+    return await isar.tasks.filter().userIdEqualTo(currentUser.uid).findAll();
   }
 
   // Add new task
   static Future<void> addTask(String text) async {
-    final task =
-        Task()
-          ..text = text;
-          // ..userId = userId;
-          // ..completed = false;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+    final task = Task()..text = text
+    ..userId = currentUser.uid;
+    // ..completed = false;
     await isar.writeTxn(() async {
       await isar.tasks.put(task);
     });

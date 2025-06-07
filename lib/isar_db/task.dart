@@ -6,6 +6,7 @@ part 'task.g.dart';
 class Task {
   Id id = Isar.autoIncrement;
   late String text;
-  // late String userId;
+  @Index()
+  late final String userId;
   bool completed = false;
 }
