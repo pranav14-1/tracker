@@ -3,18 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseAuth auth = FirebaseAuth.instance;
   static final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   static Future<UserCredential> signUpWithEmail(
     String email,
     String password,
   ) async {
-    final credential = await _auth.createUserWithEmailAndPassword(
+    final credential = await auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
-
     await saveUserData(credential.user!);
     return credential;
   }
@@ -25,14 +24,14 @@ class AuthService {
     await userDoc.set(
       userData,
       SetOptions(merge: true),
-    ); 
+    );
   }
 
   static Future<UserCredential> loginWithEmail(
     String email,
     String password,
   ) async {
-    return await _auth.signInWithEmailAndPassword(
+    return await auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
@@ -44,7 +43,7 @@ class AuthService {
       await googleSignIn.disconnect();
       await googleSignIn.signOut();
     }
-    await _auth.signOut();
+    await auth.signOut();
   }
 
   static Future<UserCredential?> loginWithGoogle() async {
@@ -56,8 +55,11 @@ class AuthService {
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
-    final authResult = await _auth.signInWithCredential(credential);
+    final authResult = await auth.signInWithCredential(credential);
     await saveUserData(authResult.user!);
     return authResult;
+  }
+  static User? getCurrentUser() {
+    return auth.currentUser;
   }
 }

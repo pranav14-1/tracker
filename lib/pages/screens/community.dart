@@ -45,9 +45,7 @@ class CommunityPage extends StatelessWidget {
         final users = snapshot.data!;
         return ListView.separated(
           itemCount: users.length,
-          separatorBuilder:
-              (context, index) =>
-                  const SizedBox(height: 12),
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             return buildUserListItem(users[index], context);
           },
@@ -68,7 +66,11 @@ class CommunityPage extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatPage(receiverEmail: userData["email"]),
+            builder:
+                (context) => ChatPage(
+                  receiverEmail: userData["email"],
+                  receiverId: userData["uid"],
+                ),
           ),
         );
       },
