@@ -74,7 +74,7 @@ class _HomeAtivityState extends State<HomeAtivity> {
 
   void deleteTask(int index) async {
     final task = activity[index];
-    await TaskDB.deleteTask(task.id!);
+    await TaskDB.deleteTask(task.id);
     await loadTasks();
   }
 
@@ -90,7 +90,7 @@ class _HomeAtivityState extends State<HomeAtivity> {
           onAdd: () async {
             final newText = _controller.text.trim();
             if (newText.isNotEmpty) {
-              await TaskDB.updateTaskText(task.id!, newText);
+              await TaskDB.updateTaskText(task.id, newText);
               await loadTasks();
             }
             Navigator.of(context).pop();

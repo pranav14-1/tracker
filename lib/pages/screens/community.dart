@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:tracker/components/userTile.dart';
 import 'package:tracker/firebase/chat/chatPage.dart';
 import 'package:tracker/firebase/chat/chat_service.dart';

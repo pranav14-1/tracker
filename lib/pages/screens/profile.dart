@@ -33,7 +33,7 @@ class ProfilePage extends StatelessWidget {
             ),
             SizedBox(height: 5),
             Text(
-              user?.email ?? 'No email found',
+              user?.phoneNumber?? user?.email?? 'No user info found',
               style: TextStyle(fontSize: 18, color: Colors.blue),
             ),
             SizedBox(height: 30),
