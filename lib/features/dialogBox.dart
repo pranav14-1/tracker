@@ -4,12 +4,14 @@ class TaskDialog extends StatelessWidget {
   final controller;
   VoidCallback onAdd;
   VoidCallback onCancel;
+  final String onAddText;
 
   TaskDialog({
     super.key,
     required this.controller,
     required this.onAdd,
     required this.onCancel,
+    required this.onAddText,
   });
 
   @override
@@ -57,7 +59,7 @@ class TaskDialog extends StatelessWidget {
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black,
                     ),
-                    child: Text('Add', style: TextStyle(fontSize: 15)),
+                    child: Text(onAddText, style: TextStyle(fontSize: 15)),
                   ),
                 ),
               ],

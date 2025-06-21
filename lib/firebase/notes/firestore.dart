@@ -3,23 +3,37 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class FireStoreService {
   // get collection of notes
-  final CollectionReference notes = FirebaseFirestore.instance.collection(
-    "notes",
-  );
+  CollectionReference get _userNotes {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    return FirebaseFirestore.instance
+        .collection('user_notes')
+        .doc(user.uid)
+        .collection('notes');
+  }
 
   // CREATE : add a new note
-  Future<void> addNote(String note) {
+  Future<void> addNote(String note) async {
     final user = FirebaseAuth.instance.currentUser;
-    return notes.add({
+    if (user == null) return;
+
+    // create user document if not exists
+    await FirebaseFirestore.instance
+        .collection('user_notes')
+        .doc(user.uid)
+        .set({}, SetOptions(merge: true));
+
+    // Add notes to user's subcollection
+    await _userNotes.add({
       'note': note,
-      'userId': user?.uid ?? '',
       'timestamp': Timestamp.now(),
       'completions': {},
     });
   }
 
   Future<void> markCompletion(String docID, String date) async {
-    final docRef = notes.doc(docID);
+    final docRef = _userNotes.doc(docID);
     final doc = await docRef.get();
 
     if (doc.exists) {
@@ -27,7 +41,6 @@ class FireStoreService {
         doc['completions'] ?? {},
       );
 
-      // toggle completions based on marking scheme
       final currentStatus = currentCompletions[date] ?? false;
       currentCompletions[date] = !currentStatus;
 
@@ -38,40 +51,35 @@ class FireStoreService {
     }
   }
 
-  // GET COMPLETIONS: Stream for heatmap data
-  Stream<DocumentSnapshot> getNoteCompletions(String docID) {
-    return notes.doc(docID).snapshots();
-  }
-
-  // READ : get notes from database
+  // READ: Get notes stream for current user
   Stream<QuerySnapshot> getNotesStream() {
-    final user = FirebaseAuth.instance.currentUser;
-    return notes
-        .where('userId', isEqualTo: user?.uid ?? '')
-        .orderBy('timestamp', descending: true)
-        .snapshots();
+    try {
+      return _userNotes.orderBy('timestamp', descending: true).snapshots();
+    } catch (e) {
+      return Stream.empty();
+    }
   }
 
-  // UPDATE: update notes given a doc id
+  // UPDATE: Update note text
   Future<void> updateNotes(String docID, String newNote) {
-    return notes.doc(docID).update({
+    return _userNotes.doc(docID).update({
       'note': newNote,
       'timestamp': Timestamp.now(),
     });
   }
 
-  // DELETE : delete notes given a doc id
+  // DELETE: Delete note
   Future<void> deleteNote(String docID) {
-    return notes.doc(docID).delete();
+    return _userNotes.doc(docID).delete();
   }
 
-  // Saving First time the app has launched
+  // Saving first launch time (now in user document)
   Future<void> saveFirstLaunchTime() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     final userDoc = FirebaseFirestore.instance
-        .collection('Users')
+        .collection('user_notes')
         .doc(user.uid);
 
     final docSnapshot = await userDoc.get();
@@ -84,17 +92,16 @@ class FireStoreService {
     }
   }
 
-  // retrieve the first time the app has launched
+  // Retrieve first launch time
   Future<Timestamp?> getFirstLaunchTime() async {
     final user = FirebaseAuth.instance.currentUser;
-
     if (user == null) return null;
 
-    final userDoc = FirebaseFirestore.instance
-        .collection('Users')
-        .doc(user.uid);
-
-    final docSnapshot = await userDoc.get();
+    final docSnapshot =
+        await FirebaseFirestore.instance
+            .collection('user_notes')
+            .doc(user.uid)
+            .get();
 
     return docSnapshot.data()?['firstLaunchTime'];
   }
