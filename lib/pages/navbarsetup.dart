@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tracker/pages/screens/community.dart';
-import 'package:tracker/pages/screens/home_ativity.dart';
+import 'package:tracker/pages/screens/home_activity.dart';
 import 'package:tracker/pages/screens/profile.dart';
 
 class HomePage extends StatefulWidget {
