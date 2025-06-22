@@ -40,9 +40,9 @@ class _HomeAtivityState extends State<HomeAtivity> {
   }
 
   // edit habit box
-  void editHabitBox(String docID) {
+  void editHabitBox(String docID, String noteText) {
     // set the controller's text to the current note's name
-    _controller.text = "Hello";
+    _controller.text = noteText;
 
     showDialog(
       context: context,
@@ -51,6 +51,7 @@ class _HomeAtivityState extends State<HomeAtivity> {
           controller: _controller,
           onAdd: () {
             fireStoreService.updateNotes(docID, _controller.text);
+            Navigator.pop(context);
           },
           onCancel: Navigator.of(context).pop,
           onAddText: "Update",
@@ -132,7 +133,7 @@ class _HomeAtivityState extends State<HomeAtivity> {
                     toggleValue();
                     await fireStoreService.markCompletion(docID, today);
                   },
-                  editHabit: (context) => editHabitBox(docID),
+                  editHabit: (context) => editHabitBox(docID, noteText),
                   deleteHabit: (context) => deleteHabitBox(docID),
                 );
               },
