@@ -47,23 +47,20 @@ class _PasswordLoginState extends State<PasswordLogin> {
       decoration: InputDecoration(
         labelText: widget.labelledText,
         filled: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        suffixIcon: _isPasswordFocused
-            ? IconButton(
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
-                icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_off
-                      : Icons.visibility,
-                ),
-              )
-            : null,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        suffixIcon:
+            _isPasswordFocused
+                ? IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  ),
+                )
+                : null,
       ),
     );
   }
