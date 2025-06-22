@@ -17,7 +17,8 @@ class MyHeatMap extends StatelessWidget {
     return HeatMap(
       startDate: startDate,
       endDate: DateTime.now(),
-      datasets: datasets,
+      datasets: datasets,   
+      borderRadius: 10.0,
       colorMode: ColorMode.color,
       defaultColor: Theme.of(context).colorScheme.secondary,
       textColor: isDarkMode ? Colors.white : Colors.black,
