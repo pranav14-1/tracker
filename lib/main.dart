@@ -1,12 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tracker/features/page_swipe.dart';
 import 'package:tracker/firebase/log_sign/redirect.dart';
 import 'package:tracker/firebase/log_sign/login.dart';
 import 'package:tracker/pages/navbarsetup.dart';
 import 'package:tracker/firebase/log_sign/signup.dart';
-// import 'package:tracker/theme/darkMode.dart';
-// import 'package:tracker/theme/lightMode.dart';
 import 'package:tracker/theme/themeSwitch.dart';
 import 'package:get/get.dart';
 
@@ -35,6 +34,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LogIn(),
         '/signup': (context) => SignUp(),
         '/home': (context) => HomePage(),
+        '/pageScroll' : (context) => MyPageSwipe(),
       },
     );
   }
