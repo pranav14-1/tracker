@@ -37,7 +37,7 @@ class _SignUpState extends State<SignUp> {
     if (passwordConfirmed()) {
       try {
         await AuthService.signUpWithEmail(email.text.trim(), password.text.trim());
-        Get.toNamed('/pageScroll');
+        Get.toNamed('/home');
       } catch (e) {
         showDialog(
           context: context,

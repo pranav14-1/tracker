@@ -51,7 +51,7 @@ class NoteTile extends StatelessWidget {
             decoration: BoxDecoration(
               color:
                   isCompleted
-                      ? Colors.green
+                      ? Colors.blue
                       : Theme.of(context).colorScheme.secondary,
               borderRadius: BorderRadius.circular(8),
             ),
@@ -70,7 +70,7 @@ class NoteTile extends StatelessWidget {
 
               // checkbox
               leading: Checkbox(
-                activeColor: Colors.green,
+                activeColor: Colors.blue,
                 value: isCompleted,
                 onChanged: onChanged,
               ),

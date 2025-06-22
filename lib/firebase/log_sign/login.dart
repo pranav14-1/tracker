@@ -43,7 +43,7 @@ class _LogInState extends State<LogIn> {
   Future<void> Goto() async {
     try {
       await AuthService.loginWithEmail(email.text, password.text);
-      Navigator.pushNamed(context, '/pageScroll');
+      Navigator.pushNamed(context, '/home');
     } catch (e) {
       String errorMessage = 'Authentication failed';
       if (e is FirebaseAuthException) {

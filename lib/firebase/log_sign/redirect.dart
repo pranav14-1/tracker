@@ -2,8 +2,8 @@
 //if no data->log in
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:tracker/features/page_swipe.dart';
 import 'package:tracker/firebase/log_sign/login.dart';
+import 'package:tracker/pages/navbarsetup.dart';
 
 class Redirect extends StatefulWidget {
   const Redirect({super.key});
@@ -20,7 +20,7 @@ class _RedirectState extends State<Redirect> {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return MyPageSwipe();
+            return HomePage();
           } else {
             return LogIn();
           }
