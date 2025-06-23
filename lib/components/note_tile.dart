@@ -39,6 +39,17 @@ class NoteTile extends StatelessWidget {
             ),
           ],
         ),
+        startActionPane: ActionPane(
+          motion: StretchMotion(),
+          children: [
+            SlidableAction(
+              onPressed: editHabit,
+              icon: Icons.plus_one,
+              borderRadius: BorderRadius.circular(8),
+              backgroundColor: Colors.cyanAccent,
+            ),
+          ],
+        ),
         // habit tile
         child: GestureDetector(
           onTap: () {

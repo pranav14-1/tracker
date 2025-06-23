@@ -12,14 +12,14 @@ import 'package:tracker/theme/themeSwitch.dart';
 String avatar(dynamic value) =>
     'https://api.dicebear.com/7.x/adventurer/png?seed=$value';
 
-class HomeAtivity extends StatefulWidget {
-  const HomeAtivity({super.key});
+class HomeActivity extends StatefulWidget {
+  const HomeActivity({super.key});
 
   @override
-  State<HomeAtivity> createState() => _HomeAtivityState();
+  State<HomeActivity> createState() => _HomeAtivityState();
 }
 
-class _HomeAtivityState extends State<HomeAtivity> {
+class _HomeAtivityState extends State<HomeActivity> {
   // Text Controller
   final _controller = TextEditingController();
 

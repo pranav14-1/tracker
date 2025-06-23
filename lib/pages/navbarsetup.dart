@@ -12,7 +12,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 1;
-  final List<Widget> pages = [CommunityPage(), HomeAtivity(), ProfilePage()];
+  final List<Widget> pages = [CommunityPage(), HomeActivity(), ProfilePage()];
 
   @override
   Widget build(BuildContext context) {
