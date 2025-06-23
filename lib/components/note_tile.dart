@@ -7,6 +7,7 @@ class NoteTile extends StatelessWidget {
   final void Function(bool?)? onChanged;
   final void Function(BuildContext)? editHabit;
   final void Function(BuildContext)? deleteHabit;
+  final int? totalDuration;
   const NoteTile({
     super.key,
     required this.isCompleted,
@@ -14,6 +15,7 @@ class NoteTile extends StatelessWidget {
     required this.onChanged,
     required this.editHabit,
     required this.deleteHabit,
+    this.totalDuration,
   });
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class NoteTile extends StatelessWidget {
             SlidableAction(
               onPressed: editHabit,
               backgroundColor: Colors.grey.shade800,
-              icon: Icons.settings,
+              icon: Icons.edit,
               borderRadius: BorderRadius.circular(8),
             ),
             // delete option
@@ -37,6 +39,13 @@ class NoteTile extends StatelessWidget {
               icon: Icons.delete,
               borderRadius: BorderRadius.circular(8),
             ),
+            //counter
+            // SlidableAction(
+            //   onPressed:setCounter,
+            //   backgroundColor: Colors.grey.shade800,
+            //   icon:Icons.timelapse,
+            //   borderRadius: BorderRadius.circular(8),
+            // )
           ],
         ),
         startActionPane: ActionPane(
@@ -46,7 +55,6 @@ class NoteTile extends StatelessWidget {
               onPressed: editHabit,
               icon: Icons.plus_one,
               borderRadius: BorderRadius.circular(8),
-              backgroundColor: Colors.cyanAccent,
             ),
           ],
         ),
@@ -69,14 +77,30 @@ class NoteTile extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: ListTile(
               // text
-              title: Text(
-                text,
-                style: TextStyle(
-                  color:
-                      isCompleted
-                          ? Colors.white
-                          : Theme.of(context).colorScheme.inversePrimary,
-                ),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    text,
+                    style: TextStyle(
+                      color:
+                          isCompleted
+                              ? Colors.white
+                              : Theme.of(context).colorScheme.inversePrimary,
+                      fontSize: 16,
+                    ),
+                  ),
+
+                  //Show timer if it's set
+                  if (totalDuration != null)
+                    Text(
+                      "${totalDuration! ~/ 60} min timer",
+                      style: TextStyle(
+                        color: isCompleted ? Colors.white70 : Colors.grey[500],
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
               ),
 
               // checkbox

@@ -14,7 +14,7 @@ class FireStoreService {
   }
 
   // CREATE : add a new note
-  Future<void> addNote(String note) async {
+  Future<void> addNote(String note, [int? durationMins]) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -25,11 +25,21 @@ class FireStoreService {
         .set({}, SetOptions(merge: true));
 
     // Add notes to user's subcollection
-    await _userNotes.add({
+    final Map<String, dynamic> noteData = {
       'note': note,
       'timestamp': Timestamp.now(),
       'completions': {},
-    });
+    };
+
+    if (durationMins != null && durationMins > 0) {
+      noteData.addAll({
+        'isRunning': false,
+        'startTime': null,
+        'elapsedSeconds': 0,
+        'totalDuration': durationMins * 60,
+      });
+    }
+    await _userNotes.add(noteData);
   }
 
   Future<void> markCompletion(String docID, String date) async {
@@ -60,13 +70,22 @@ class FireStoreService {
     }
   }
 
-  // UPDATE: Update note text
-  Future<void> updateNotes(String docID, String newNote) {
-    return _userNotes.doc(docID).update({
-      'note': newNote,
-      'timestamp': Timestamp.now(),
-    });
+  // UPDATE: Update note text and timer
+  Future<void> updateNotes(String docID, String newNote, [int? durationMins]) async {
+  final updateData = {
+    'note': newNote,
+    'timestamp': Timestamp.now(),
+  };
+
+  if (durationMins != null && durationMins > 0) {
+    updateData['totalDuration'] = durationMins * 60;
+  } else {
+    updateData['totalDuration'] = FieldValue.delete();
   }
+
+  await _userNotes.doc(docID).update(updateData);
+}
+
 
   // DELETE: Delete note
   Future<void> deleteNote(String docID) {
@@ -104,5 +123,36 @@ class FireStoreService {
             .get();
 
     return docSnapshot.data()?['firstLaunchTime'];
+  }
+
+  //timer set up
+  Future<void> toggleTimer(Map<String, dynamic> task, String docId) async {
+    final docRef = _userNotes.doc(docId);
+
+    if (task['isRunning'] == true && task['startTime'] != null) {
+      // Pause
+      final startTime = (task['startTime'] as Timestamp).toDate();
+      final elapsed = DateTime.now().difference(startTime).inSeconds;
+      final totalElapsed = (task['elapsedSeconds'] ?? 0) + elapsed;
+
+      await docRef.update({
+        'isRunning': false,
+        'startTime': null,
+        'elapsedSeconds': totalElapsed,
+      });
+    } else {
+      // Start
+      await docRef.update({'isRunning': true, 'startTime': Timestamp.now()});
+    }
+  }
+
+  Future<void> stopTimer(String docId) async {
+    final docRef = _userNotes.doc(docId);
+
+    await docRef.update({
+      'isRunning': false,
+      'startTime': null,
+      'elapsedSeconds': 0,
+    });
   }
 }

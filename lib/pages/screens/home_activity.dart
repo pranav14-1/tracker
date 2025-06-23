@@ -21,35 +21,49 @@ class HomeActivity extends StatefulWidget {
 
 class _HomeAtivityState extends State<HomeActivity> {
   // Text Controller
-  final _controller = TextEditingController();
+  final noteController = TextEditingController();
+  final durationController = TextEditingController();
 
   bool isCompleted = false;
 
   // firestore service
   final FireStoreService fireStoreService = FireStoreService();
 
-  void addNewTask() {
+  void addNewTask() async {
+    final note = noteController.text.trim();
+    final durationText = durationController.text.trim();
+    final durationMins = int.tryParse(durationText);
     // add a new note to the server
-    fireStoreService.addNote(_controller.text);
+    if (note.isNotEmpty) {
+      await fireStoreService.addNote(note, durationMins);
 
-    // clear the text controller
-    _controller.clear();
+      // Clear inputs
+      noteController.clear();
+      durationController.clear();
 
-    Navigator.pop(context);
+      // Close the dialog or screen
+      Navigator.pop(context);
+    }
   }
 
   // edit habit box
-  void editHabitBox(String docID, String noteText) {
+  void editHabitBox(String docID, String noteText, int? totalDuration) {
     // set the controller's text to the current note's name
-    _controller.text = noteText;
+    noteController.text = noteText;
+    durationController.text =
+        totalDuration != null ? (totalDuration ~/ 60).toString() : '';
 
     showDialog(
       context: context,
       builder: (context) {
         return TaskDialog(
-          controller: _controller,
+          noteController: noteController,
+          durationController: durationController,
           onAdd: () {
-            fireStoreService.updateNotes(docID, _controller.text);
+            final note = noteController.text.trim();
+            final durationText = durationController.text.trim();
+            final durationMins = int.tryParse(durationText);
+            fireStoreService.updateNotes(docID, note, durationMins);
             Navigator.pop(context);
           },
           onCancel: Navigator.of(context).pop,
@@ -70,14 +84,21 @@ class _HomeAtivityState extends State<HomeActivity> {
   }
 
   void newTask() {
+    noteController.clear();
+    durationController.clear();
     showDialog(
       context: context,
       builder: (context) {
         return TaskDialog(
-          controller: _controller,
+          noteController: noteController,
+          durationController: durationController,
           onAdd: addNewTask,
           onAddText: "Add",
-          onCancel: Navigator.of(context).pop,
+          onCancel: () {
+            noteController.clear();
+            durationController.clear();
+            Navigator.of(context).pop();
+          },
         );
       },
     );
@@ -177,14 +198,20 @@ class _HomeAtivityState extends State<HomeActivity> {
                       bool isCompletedToday =
                           completions[today] as bool? ?? false;
 
+                      //Extract totalDuration (in seconds) from Firestore
+                      int? totalDuration = data['totalDuration'];
+
                       return NoteTile(
                         isCompleted: isCompletedToday,
                         text: noteText,
                         onChanged: (value) async {
                           await fireStoreService.markCompletion(docID, today);
                         },
-                        editHabit: (context) => editHabitBox(docID, noteText),
+                        editHabit:
+                            (context) =>
+                                editHabitBox(docID, noteText, totalDuration),
                         deleteHabit: (context) => deleteHabitBox(docID),
+                        totalDuration: totalDuration,
                       );
                     },
                   ),
