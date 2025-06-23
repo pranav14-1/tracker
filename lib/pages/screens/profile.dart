@@ -10,6 +10,8 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
+
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -33,7 +35,7 @@ class ProfilePage extends StatelessWidget {
             ),
             SizedBox(height: 5),
             Text(
-              user?.phoneNumber?? user?.email?? 'No user info found',
+              user?.phoneNumber ?? user?.email ?? 'No user info found',
               style: TextStyle(fontSize: 18, color: Colors.blue),
             ),
             SizedBox(height: 30),
@@ -48,6 +50,8 @@ class ProfilePage extends StatelessWidget {
                 style: TextStyle(color: Colors.white),
               ),
             ),
+            const SizedBox(height: 20),
+            Container(child: Text("Select Theme Colour")),
           ],
         ),
       ),
