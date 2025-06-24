@@ -212,6 +212,9 @@ class _HomeAtivityState extends State<HomeActivity> {
                                 editHabitBox(docID, noteText, totalDuration),
                         deleteHabit: (context) => deleteHabitBox(docID),
                         totalDuration: totalDuration,
+                        // toggleTimer: (context) {
+                        //   fireStoreService.toggleTimer(data, docID);
+                        // },
                       );
                     },
                   ),

@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FireStoreService {
-  // get collection of notes
+  /// Returns a reference to the current user's notes collection
   CollectionReference get _userNotes {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('User not authenticated');
@@ -13,18 +13,17 @@ class FireStoreService {
         .collection('notes');
   }
 
-  // CREATE : add a new note
+  /// Adds a new note with optional countdown duration (in minutes)
   Future<void> addNote(String note, [int? durationMins]) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // create user document if not exists
+    // Ensure the user document exists
     await FirebaseFirestore.instance
         .collection('user_notes')
         .doc(user.uid)
         .set({}, SetOptions(merge: true));
 
-    // Add notes to user's subcollection
     final Map<String, dynamic> noteData = {
       'note': note,
       'timestamp': Timestamp.now(),
@@ -34,14 +33,15 @@ class FireStoreService {
     if (durationMins != null && durationMins > 0) {
       noteData.addAll({
         'isRunning': false,
-        'startTime': null,
         'elapsedSeconds': 0,
         'totalDuration': durationMins * 60,
       });
     }
-    await _userNotes.add(noteData);
+
+    await _userNotes.add(noteData); 
   }
 
+  /// Toggles completion for the given note on a specific date
   Future<void> markCompletion(String docID, String date) async {
     final docRef = _userNotes.doc(docID);
     final doc = await docRef.get();
@@ -61,7 +61,7 @@ class FireStoreService {
     }
   }
 
-  // READ: Get notes stream for current user
+  /// Returns a stream of the current user's notes, ordered by creation time
   Stream<QuerySnapshot> getNotesStream() {
     try {
       return _userNotes.orderBy('timestamp', descending: true).snapshots();
@@ -70,29 +70,28 @@ class FireStoreService {
     }
   }
 
-  // UPDATE: Update note text and timer
+  /// Updates a note's text and optionally its timer
   Future<void> updateNotes(String docID, String newNote, [int? durationMins]) async {
-  final updateData = {
-    'note': newNote,
-    'timestamp': Timestamp.now(),
-  };
+    final Map<String, dynamic> updateData = {
+      'note': newNote,
+      'timestamp': Timestamp.now(),
+    };
 
-  if (durationMins != null && durationMins > 0) {
-    updateData['totalDuration'] = durationMins * 60;
-  } else {
-    updateData['totalDuration'] = FieldValue.delete();
+    if (durationMins != null && durationMins > 0) {
+      updateData['totalDuration'] = durationMins * 60;
+    } else {
+      updateData['totalDuration'] = FieldValue.delete();
+    }
+
+    await _userNotes.doc(docID).update(updateData);
   }
 
-  await _userNotes.doc(docID).update(updateData);
-}
-
-
-  // DELETE: Delete note
-  Future<void> deleteNote(String docID) {
-    return _userNotes.doc(docID).delete();
+  /// Deletes a note by its ID
+  Future<void> deleteNote(String docID) async {
+    await _userNotes.doc(docID).delete();
   }
 
-  // Saving first launch time (now in user document)
+  /// Saves the timestamp of the first app launch to the user document
   Future<void> saveFirstLaunchTime() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -103,55 +102,57 @@ class FireStoreService {
 
     final docSnapshot = await userDoc.get();
 
-    if (!docSnapshot.exists ||
-        !(docSnapshot.data()?['firstLaunchTime'] is Timestamp)) {
+    if (!docSnapshot.exists || !(docSnapshot.data()?['firstLaunchTime'] is Timestamp)) {
       await userDoc.set({
         'firstLaunchTime': Timestamp.now(),
       }, SetOptions(merge: true));
     }
   }
 
-  // Retrieve first launch time
+  /// Returns the first launch time for the current user
   Future<Timestamp?> getFirstLaunchTime() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
 
-    final docSnapshot =
-        await FirebaseFirestore.instance
-            .collection('user_notes')
-            .doc(user.uid)
-            .get();
+    final docSnapshot = await FirebaseFirestore.instance
+        .collection('user_notes')
+        .doc(user.uid)
+        .get();
 
     return docSnapshot.data()?['firstLaunchTime'];
   }
 
-  //timer set up
+  /// Starts or pauses the timer on a note
   Future<void> toggleTimer(Map<String, dynamic> task, String docId) async {
     final docRef = _userNotes.doc(docId);
 
     if (task['isRunning'] == true && task['startTime'] != null) {
-      // Pause
+      // PAUSE: Calculate elapsed time and stop timer
       final startTime = (task['startTime'] as Timestamp).toDate();
       final elapsed = DateTime.now().difference(startTime).inSeconds;
       final totalElapsed = (task['elapsedSeconds'] ?? 0) + elapsed;
 
       await docRef.update({
         'isRunning': false,
-        'startTime': null,
+        'startTime': FieldValue.delete(),
         'elapsedSeconds': totalElapsed,
       });
     } else {
-      // Start
-      await docRef.update({'isRunning': true, 'startTime': Timestamp.now()});
+      // START: Begin/resume timer
+      await docRef.update({
+        'isRunning': true,
+        'startTime': Timestamp.now(),
+      });
     }
   }
 
+  /// Stops and resets the timer for a note
   Future<void> stopTimer(String docId) async {
     final docRef = _userNotes.doc(docId);
 
     await docRef.update({
       'isRunning': false,
-      'startTime': null,
+      'startTime': FieldValue.delete(),
       'elapsedSeconds': 0,
     });
   }

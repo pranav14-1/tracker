@@ -1,113 +1,201 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-class NoteTile extends StatelessWidget {
+class NoteTile extends StatefulWidget {
   final String text;
   final bool isCompleted;
   final void Function(bool?)? onChanged;
   final void Function(BuildContext)? editHabit;
   final void Function(BuildContext)? deleteHabit;
-  final int? totalDuration;
+  final int? totalDuration; // in seconds
+  final void Function(BuildContext)? toggleTimer;
+
   const NoteTile({
     super.key,
-    required this.isCompleted,
     required this.text,
+    required this.isCompleted,
     required this.onChanged,
     required this.editHabit,
     required this.deleteHabit,
     this.totalDuration,
+    this.toggleTimer,
   });
+
+  @override
+  State<NoteTile> createState() => _NoteTileState();
+}
+
+class _NoteTileState extends State<NoteTile> {
+  Timer? _timer;
+  int passedSeconds = 0;
+  bool isRunning = false;
+
+  String _formatTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  void _toggleTimer() {
+    if (isRunning) {
+      _timer?.cancel();
+    } else {
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() {
+          passedSeconds++;
+          // Stop timer automatically if duration reached
+          if (widget.totalDuration != null &&
+              passedSeconds >= widget.totalDuration!) {
+            _timer?.cancel();
+            isRunning = false;
+          }
+        });
+      });
+    }
+    setState(() {
+      isRunning = !isRunning;
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isCountDown = widget.totalDuration != null;
+    final remaining = (widget.totalDuration ?? 0) - passedSeconds;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
       child: Slidable(
-        endActionPane: ActionPane(
-          motion: StretchMotion(),
+        startActionPane: ActionPane(
+          motion: const StretchMotion(),
           children: [
-            // edit option
             SlidableAction(
-              onPressed: editHabit,
+              onPressed: (_) => _toggleTimer(),
+              icon: isRunning ? Icons.pause : Icons.play_arrow,
+              backgroundColor: isRunning ? Colors.orange : Colors.green,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ],
+        ),
+        endActionPane: ActionPane(
+          motion: const StretchMotion(),
+          children: [
+            SlidableAction(
+              onPressed: widget.editHabit,
               backgroundColor: Colors.grey.shade800,
               icon: Icons.edit,
               borderRadius: BorderRadius.circular(8),
             ),
-            // delete option
             SlidableAction(
-              onPressed: deleteHabit,
+              onPressed: widget.deleteHabit,
               backgroundColor: Colors.red,
               icon: Icons.delete,
               borderRadius: BorderRadius.circular(8),
             ),
-            //counter
-            // SlidableAction(
-            //   onPressed:setCounter,
-            //   backgroundColor: Colors.grey.shade800,
-            //   icon:Icons.timelapse,
-            //   borderRadius: BorderRadius.circular(8),
-            // )
           ],
         ),
-        startActionPane: ActionPane(
-          motion: StretchMotion(),
-          children: [
-            SlidableAction(
-              onPressed: editHabit,
-              icon: Icons.plus_one,
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ],
-        ),
-        // habit tile
         child: GestureDetector(
           onTap: () {
-            if (onChanged != null) {
-              // toggle completion status
-              onChanged!(!isCompleted);
+            if (widget.onChanged != null) {
+              widget.onChanged!(!widget.isCompleted);
             }
           },
           child: Container(
             decoration: BoxDecoration(
               color:
-                  isCompleted
+                  widget.isCompleted
                       ? Colors.blue
                       : Theme.of(context).colorScheme.secondary,
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.all(12),
             child: ListTile(
-              // text
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Note text
                   Text(
-                    text,
+                    widget.text,
                     style: TextStyle(
                       color:
-                          isCompleted
+                          widget.isCompleted
                               ? Colors.white
                               : Theme.of(context).colorScheme.inversePrimary,
                       fontSize: 16,
                     ),
                   ),
 
-                  //Show timer if it's set
-                  if (totalDuration != null)
+                  const SizedBox(height: 3),
+
+                  // Always show total duration if present
+                  if (widget.totalDuration != null)
                     Text(
-                      "${totalDuration! ~/ 60} min timer",
+                      "${(widget.totalDuration! / 60).round()} min timer",
                       style: TextStyle(
-                        color: isCompleted ? Colors.white70 : Colors.grey[500],
+                        color:
+                            widget.isCompleted
+                                ? Colors.white70
+                                : Colors.grey[500],
                         fontSize: 12,
                       ),
                     ),
+
+                  // Show dynamic timer only when running
+                  if (isRunning)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6.0),
+                      child:
+                          isCountDown
+                              ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Time left: ${_formatTime(remaining > 0 ? remaining : 0)}",
+                                    style: TextStyle(
+                                      color:
+                                          widget.isCompleted
+                                              ? Colors.white70
+                                              : Colors.grey[500],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  LinearProgressIndicator(
+                                    value:
+                                        remaining > 0
+                                            ? 1 -
+                                                (remaining /
+                                                    widget.totalDuration!)
+                                            : 1,
+                                    minHeight: 6,
+                                    backgroundColor: Colors.grey[300],
+                                    color: Colors.green,
+                                  ),
+                                ],
+                              )
+                              : Text(
+                                "Active for: ${_formatTime(passedSeconds)}",
+                                style: TextStyle(
+                                  color:
+                                      widget.isCompleted
+                                          ? Colors.white70
+                                          : Colors.grey[500],
+                                  fontSize: 12,
+                                ),
+                              ),
+                    ),
                 ],
               ),
-
-              // checkbox
               leading: Checkbox(
                 activeColor: Colors.blue,
-                value: isCompleted,
-                onChanged: onChanged,
+                value: widget.isCompleted,
+                onChanged: widget.onChanged,
               ),
             ),
           ),
