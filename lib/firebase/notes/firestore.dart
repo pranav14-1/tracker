@@ -122,6 +122,9 @@ class FireStoreService {
     return docSnapshot.data()?['firstLaunchTime'];
   }
 
+  // Start the timer and save the data
+
+
   /// Starts or pauses the timer on a note
   Future<void> toggleTimer(Map<String, dynamic> task, String docId) async {
     final docRef = _userNotes.doc(docId);

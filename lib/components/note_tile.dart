@@ -30,6 +30,12 @@ class _NoteTileState extends State<NoteTile> {
   Timer? _timer;
   int passedSeconds = 0;
   bool isRunning = false;
+  bool isPaused = false;
+
+  // Pausing timer concept
+  Duration _elapsed = Duration.zero;
+  Duration _pausedDuration = Duration.zero;
+  Stopwatch stopwatch = Stopwatch();
 
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
@@ -37,24 +43,46 @@ class _NoteTileState extends State<NoteTile> {
     return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  void _toggleTimer() {
-    if (isRunning) {
-      _timer?.cancel();
-    } else {
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        setState(() {
-          passedSeconds++;
-          // Stop timer automatically if duration reached
-          if (widget.totalDuration != null &&
-              passedSeconds >= widget.totalDuration!) {
-            _timer?.cancel();
-            isRunning = false;
-          }
-        });
+  void _startTimer() {
+    _timer?.cancel();
+    stopwatch
+      ..reset()
+      ..start();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _elapsed = _pausedDuration + stopwatch.elapsed;
+        if (widget.totalDuration != null &&
+            _elapsed.inSeconds >= widget.totalDuration!) {
+          _stopTimer();
+        }
       });
-    }
+    });
     setState(() {
-      isRunning = !isRunning;
+      isRunning = true;
+      isPaused = false;
+    });
+  }
+
+  void _pauseTimer() {
+    _timer?.cancel();
+    stopwatch.stop();
+    setState(() {
+      _pausedDuration += stopwatch.elapsed;
+      isRunning = false;
+      isPaused = true;
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    stopwatch
+      ..stop()
+      ..reset();
+    setState(() {
+      _pausedDuration = Duration.zero;
+      _elapsed = Duration.zero;
+      isPaused = false;
+      isRunning = false;
     });
   }
 
@@ -62,27 +90,51 @@ class _NoteTileState extends State<NoteTile> {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+    stopwatch.stop();
   }
 
   @override
   Widget build(BuildContext context) {
     final isCountDown = widget.totalDuration != null;
-    final remaining = (widget.totalDuration ?? 0) - passedSeconds;
+    final remaining = (widget.totalDuration ?? 0) - _elapsed.inSeconds;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
       child: Slidable(
-        startActionPane: ActionPane(
-          motion: const StretchMotion(),
-          children: [
-            SlidableAction(
-              onPressed: (_) => _toggleTimer(),
-              icon: isRunning ? Icons.pause : Icons.play_arrow,
-              backgroundColor: isRunning ? Colors.orange : Colors.green,
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ],
-        ),
+        startActionPane:
+            widget.isCompleted == false
+                ? ActionPane(
+                  motion: const StretchMotion(),
+                  children: [
+                    // Play button (shown when timer is NOT running)
+                    if (!isRunning)
+                      SlidableAction(
+                        onPressed: (_) => _startTimer(),
+                        icon: Icons.play_circle_fill,
+                        backgroundColor: Colors.green,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+
+                    // Pause button (shown when timer is running)
+                    if (isRunning)
+                      SlidableAction(
+                        onPressed: (_) => _pauseTimer(),
+                        icon: Icons.pause_circle_filled,
+                        backgroundColor: Colors.orange,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+
+                    // Stop button (shown when timer is running OR paused)
+                    if (isRunning || isPaused)
+                      SlidableAction(
+                        onPressed: (_) => _stopTimer(),
+                        icon: Icons.stop_circle,
+                        backgroundColor: Colors.red,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                  ],
+                )
+                : null,
         endActionPane: ActionPane(
           motion: const StretchMotion(),
           children: [
@@ -102,7 +154,9 @@ class _NoteTileState extends State<NoteTile> {
         ),
         child: GestureDetector(
           onTap: () {
-            if (widget.onChanged != null) {
+            if (widget.onChanged != null &&
+                isRunning == false &&
+                isPaused == false) {
               widget.onChanged!(!widget.isCompleted);
             }
           },
@@ -147,7 +201,7 @@ class _NoteTileState extends State<NoteTile> {
                     ),
 
                   // Show dynamic timer only when running
-                  if (isRunning)
+                  if (isRunning || isPaused)
                     Padding(
                       padding: const EdgeInsets.only(top: 6.0),
                       child:

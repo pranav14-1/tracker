@@ -31,7 +31,7 @@ class MyHeatMap extends StatelessWidget {
         2: Colors.blue.shade300,
         3: Colors.blue.shade400,
         4: Colors.blue.shade500,
-        5: Colors.blue.shade600,
+        5: Colors.blue.shade700,
       },
     );
   }

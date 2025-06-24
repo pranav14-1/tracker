@@ -163,14 +163,14 @@ class _HomeAtivityState extends State<HomeActivity> {
             }
           }
 
-          // Calculate start date (last 3 months)
+          // Calculate start date 
           DateTime startDate = DateTime.now().subtract(Duration(days: 30));
 
           return Column(
             children: [
               // Heatmap Calendar
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.only(bottom: 5.0),
                 child: MyHeatMap(
                   isDarkMode: Provider.of<ThemeSwitch>(context).isDarkMode,
                   startDate: startDate,
