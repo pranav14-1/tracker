@@ -162,6 +162,7 @@ class _HomeAtivityState extends State<HomeActivity> {
               Map<String, dynamic> completions =
                   (data['completions'] as Map<String, dynamic>?) ?? {};
 
+              //counts task completed
               completions.forEach((dateStr, isCompleted) {
                 if (isCompleted == true) {
                   DateTime date = DateTime.parse(dateStr);
@@ -179,7 +180,7 @@ class _HomeAtivityState extends State<HomeActivity> {
           }
 
           // Calculate start date (last 3 months)
-          DateTime startDate = DateTime.now().subtract(Duration(days: 30));
+          DateTime startDate = DateTime.now().subtract(Duration(days: 90));
 
           return Column(
             children: [
