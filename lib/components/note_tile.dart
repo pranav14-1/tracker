@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class NoteTile extends StatefulWidget {
   final String text;
@@ -10,6 +11,7 @@ class NoteTile extends StatefulWidget {
   final void Function(BuildContext)? deleteHabit;
   final int? totalDuration; // in seconds
   final void Function(BuildContext)? toggleTimer;
+  final ValueNotifier<bool>? anyTimerRunningNotifier;
 
   const NoteTile({
     super.key,
@@ -20,6 +22,7 @@ class NoteTile extends StatefulWidget {
     required this.deleteHabit,
     this.totalDuration,
     this.toggleTimer,
+    this.anyTimerRunningNotifier,
   });
 
   @override
@@ -32,7 +35,6 @@ class _NoteTileState extends State<NoteTile> {
   bool isRunning = false;
   bool isPaused = false;
 
-  // Pausing timer concept
   Duration _elapsed = Duration.zero;
   Duration _pausedDuration = Duration.zero;
   Stopwatch stopwatch = Stopwatch();
@@ -48,18 +50,33 @@ class _NoteTileState extends State<NoteTile> {
     stopwatch
       ..reset()
       ..start();
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _elapsed = _pausedDuration + stopwatch.elapsed;
+
+        //Countdown mode: check if time is up
         if (widget.totalDuration != null &&
             _elapsed.inSeconds >= widget.totalDuration!) {
           _stopTimer();
+
+          //auto-complete if timer finished
+          if (widget.onChanged != null && widget.isCompleted == false) {
+            widget.onChanged!(true);
+          }
+        }
+
+        //Counter-update passedSeconds
+        if (widget.totalDuration == null) {
+          passedSeconds = _elapsed.inSeconds;
         }
       });
     });
+
     setState(() {
       isRunning = true;
       isPaused = false;
+      widget.anyTimerRunningNotifier?.value = true;
     });
   }
 
@@ -70,6 +87,7 @@ class _NoteTileState extends State<NoteTile> {
       _pausedDuration += stopwatch.elapsed;
       isRunning = false;
       isPaused = true;
+      widget.anyTimerRunningNotifier?.value = true;
     });
   }
 
@@ -83,14 +101,21 @@ class _NoteTileState extends State<NoteTile> {
       _elapsed = Duration.zero;
       isPaused = false;
       isRunning = false;
+      widget.anyTimerRunningNotifier?.value = false;
     });
+    //mark the task as completed if counter stopped
+    if (widget.totalDuration == null &&
+        widget.onChanged != null &&
+        widget.isCompleted == false) {
+      widget.onChanged!(true);
+    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    super.dispose();
     stopwatch.stop();
+    super.dispose();
   }
 
   @override
@@ -106,7 +131,6 @@ class _NoteTileState extends State<NoteTile> {
                 ? ActionPane(
                   motion: const StretchMotion(),
                   children: [
-                    // Play button (shown when timer is NOT running)
                     if (!isRunning)
                       SlidableAction(
                         onPressed: (_) => _startTimer(),
@@ -114,8 +138,6 @@ class _NoteTileState extends State<NoteTile> {
                         backgroundColor: Colors.green,
                         borderRadius: BorderRadius.circular(8),
                       ),
-
-                    // Pause button (shown when timer is running)
                     if (isRunning)
                       SlidableAction(
                         onPressed: (_) => _pauseTimer(),
@@ -123,8 +145,6 @@ class _NoteTileState extends State<NoteTile> {
                         backgroundColor: Colors.orange,
                         borderRadius: BorderRadius.circular(8),
                       ),
-
-                    // Stop button (shown when timer is running OR paused)
                     if (isRunning || isPaused)
                       SlidableAction(
                         onPressed: (_) => _stopTimer(),
@@ -139,13 +159,42 @@ class _NoteTileState extends State<NoteTile> {
           motion: const StretchMotion(),
           children: [
             SlidableAction(
-              onPressed: widget.editHabit,
+              //edit task
+              onPressed: (_) {
+                if (isRunning || isPaused) {
+                  //show toast while running
+                  Fluttertoast.showToast(
+                    msg: "Cannot edit a task while the timer is running",
+                    gravity: ToastGravity.BOTTOM,
+                  );
+                } else if (widget.isCompleted) {
+                  //show toast for completed task
+                  Fluttertoast.showToast(
+                    msg: "You cannot edit a completed task",
+                    gravity: ToastGravity.BOTTOM,
+                  );
+                } else {
+                  widget.editHabit?.call(context);
+                }
+              },
               backgroundColor: Colors.grey.shade800,
               icon: Icons.edit,
               borderRadius: BorderRadius.circular(8),
             ),
             SlidableAction(
-              onPressed: widget.deleteHabit,
+              //delete task
+              onPressed: (_) {
+                if (isRunning || isPaused) {
+                  //show toast while running
+                  Fluttertoast.showToast(
+                    msg: "Cannot delete a task while the timer is running",
+                    gravity: ToastGravity.BOTTOM,
+                  );
+                }
+                else {
+                  widget.deleteHabit?.call(context);
+                }
+              },
               backgroundColor: Colors.red,
               icon: Icons.delete,
               borderRadius: BorderRadius.circular(8),
@@ -173,7 +222,6 @@ class _NoteTileState extends State<NoteTile> {
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Note text
                   Text(
                     widget.text,
                     style: TextStyle(
@@ -184,10 +232,7 @@ class _NoteTileState extends State<NoteTile> {
                       fontSize: 16,
                     ),
                   ),
-
                   const SizedBox(height: 3),
-
-                  // Always show total duration if present
                   if (widget.totalDuration != null)
                     Text(
                       "${(widget.totalDuration! / 60).round()} min timer",
@@ -199,9 +244,13 @@ class _NoteTileState extends State<NoteTile> {
                         fontSize: 12,
                       ),
                     ),
-
-                  // Show dynamic timer only when running
-                  if (isRunning || isPaused)
+                  //condition to check if runnig or pasued or completed
+                  //also check if the counter was started or not
+                  if (isRunning ||
+                      isPaused ||
+                      (widget.totalDuration == null &&
+                          widget.isCompleted &&
+                          passedSeconds > 0))
                     Padding(
                       padding: const EdgeInsets.only(top: 6.0),
                       child:
@@ -229,12 +278,14 @@ class _NoteTileState extends State<NoteTile> {
                                             : 1,
                                     minHeight: 6,
                                     backgroundColor: Colors.grey[300],
-                                    color: Colors.green,
+                                    color: Colors.blue,
                                   ),
                                 ],
                               )
                               : Text(
-                                "Active for: ${_formatTime(passedSeconds)}",
+                                widget.isCompleted
+                                    ? "Work done for ${(passedSeconds / 60).ceil()} minutes"
+                                    : "Active for: ${_formatTime(passedSeconds)}",
                                 style: TextStyle(
                                   color:
                                       widget.isCompleted

@@ -49,6 +49,7 @@ dependencies:
   intl:
   flutter_heatmap_calendar: ^1.0.5
   percent_indicator: 
+  fluttertoast: ^8.2.12
 
 dev_dependencies:
   flutter_test:

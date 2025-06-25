@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tracker/components/my_heat_map.dart';
 import 'package:tracker/components/note_tile.dart';
-import 'package:tracker/features/dialogBox.dart';
+import 'package:tracker/components/dialogBox.dart';
 import 'package:tracker/firebase/notes/firestore.dart';
 import 'package:tracker/theme/switchButton.dart';
 import 'package:intl/intl.dart';
 import 'package:tracker/theme/themeSwitch.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 String avatar(dynamic value) =>
     'https://api.dicebear.com/7.x/adventurer/png?seed=$value';
@@ -104,6 +105,20 @@ class _HomeAtivityState extends State<HomeActivity> {
     );
   }
 
+  late ValueNotifier<bool> anyTimerRunningNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    anyTimerRunningNotifier = ValueNotifier(false);
+  }
+
+  @override
+  void dispose() {
+    anyTimerRunningNotifier.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -163,14 +178,14 @@ class _HomeAtivityState extends State<HomeActivity> {
             }
           }
 
-          // Calculate start date 
+          // Calculate start date (last 3 months)
           DateTime startDate = DateTime.now().subtract(Duration(days: 30));
 
           return Column(
             children: [
               // Heatmap Calendar
               Padding(
-                padding: const EdgeInsets.only(bottom: 5.0),
+                padding: const EdgeInsets.all(16.0),
                 child: MyHeatMap(
                   isDarkMode: Provider.of<ThemeSwitch>(context).isDarkMode,
                   startDate: startDate,
@@ -212,6 +227,7 @@ class _HomeAtivityState extends State<HomeActivity> {
                                 editHabitBox(docID, noteText, totalDuration),
                         deleteHabit: (context) => deleteHabitBox(docID),
                         totalDuration: totalDuration,
+                        anyTimerRunningNotifier: anyTimerRunningNotifier,
                         // toggleTimer: (context) {
                         //   fireStoreService.toggleTimer(data, docID);
                         // },
@@ -223,11 +239,24 @@ class _HomeAtivityState extends State<HomeActivity> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: newTask,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.blue,
-        child: const Icon(Icons.add),
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: anyTimerRunningNotifier,
+        builder: (context, isRunning, _) {
+          return FloatingActionButton(
+            onPressed:
+                isRunning
+                    ? () {
+                      Fluttertoast.showToast(
+                        msg: "Cannot add a task while a timer is running",
+                        gravity: ToastGravity.BOTTOM,
+                      );
+                    }
+                    : newTask,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.blue,
+            child: const Icon(Icons.add),
+          );
+        },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
