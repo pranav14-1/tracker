@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tracker/components/my_app_bar.dart';
 import 'package:tracker/firebase/log_sign/auth.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -13,18 +14,7 @@ class ProfilePage extends StatelessWidget {
 
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'PROFILE',
-          style: TextStyle(
-            color: Colors.blue,
-            fontSize: 25,
-            decoration: TextDecoration.underline,
-            decorationColor: Colors.blue,
-            decorationThickness: 2,
-          ),
-        ),
-      ),
+      appBar: MyAppBar(text: "Profile"),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

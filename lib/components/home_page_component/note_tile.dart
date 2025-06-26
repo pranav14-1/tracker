@@ -12,6 +12,8 @@ class NoteTile extends StatefulWidget {
   final int? totalDuration; // in seconds
   final void Function(BuildContext)? toggleTimer;
   final ValueNotifier<bool>? anyTimerRunningNotifier;
+  final void Function()? toggleFavorite;
+  final bool isRenewable;
 
   const NoteTile({
     super.key,
@@ -23,6 +25,8 @@ class NoteTile extends StatefulWidget {
     this.totalDuration,
     this.toggleTimer,
     this.anyTimerRunningNotifier,
+    required this.toggleFavorite,
+    required this.isRenewable,
   });
 
   @override
@@ -190,8 +194,7 @@ class _NoteTileState extends State<NoteTile> {
                     msg: "Cannot delete a task while the timer is running",
                     gravity: ToastGravity.BOTTOM,
                   );
-                }
-                else {
+                } else {
                   widget.deleteHabit?.call(context);
                 }
               },
@@ -301,6 +304,12 @@ class _NoteTileState extends State<NoteTile> {
                 activeColor: Colors.blue,
                 value: widget.isCompleted,
                 onChanged: widget.onChanged,
+              ),
+              trailing: IconButton(
+                onPressed: widget.toggleFavorite,
+                icon: Icon(Icons.autorenew),
+                color: 
+                    widget.isRenewable ? Colors.blueGrey : Colors.grey,
               ),
             ),
           ),

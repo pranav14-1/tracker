@@ -25,6 +25,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.13.0"
+  animated_icon_switch:
+    dependency: "direct main"
+    description:
+      name: animated_icon_switch
+      sha256: "848ace9f623809fa8a65ee7cbe9c1a2b57779fa83dc10235fd32be7adddcae71"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   args:
     dependency: transitive
     description:

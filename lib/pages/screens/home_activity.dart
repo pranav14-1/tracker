@@ -1,13 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tracker/components/my_heat_map.dart';
-import 'package:tracker/components/note_tile.dart';
-import 'package:tracker/components/dialogBox.dart';
+import 'package:tracker/components/home_page_component/my_heat_map.dart';
+import 'package:tracker/components/home_page_component/note_tile.dart';
+import 'package:tracker/components/my_app_bar.dart';
 import 'package:tracker/firebase/notes/firestore.dart';
 import 'package:tracker/services/note_CRUD_functions.dart';
 import 'package:tracker/services/note_class/note.dart';
-import 'package:tracker/theme/switchButton.dart';
 import 'package:intl/intl.dart';
 import 'package:tracker/theme/themeSwitch.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -30,12 +29,11 @@ class _HomeAtivityState extends State<HomeActivity> {
   // This is the class which holds the basic component of note adding and deleting
   late TaskDialogParams params;
 
+  // used to track if the note is completed or not
   bool isCompleted = false;
 
   // firestore service
   final FireStoreService fireStoreService = FireStoreService();
-
-
 
   void toggleValue() {
     setState(() {
@@ -65,23 +63,11 @@ class _HomeAtivityState extends State<HomeActivity> {
   @override
   Widget build(BuildContext context) {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final now = DateTime.now();
+    final today_date = DateTime(now.year, now.month, now.day);
+
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(
-          'TRACKER',
-          style: TextStyle(
-            color: Colors.blue,
-            fontSize: 25,
-            decoration: TextDecoration.underline,
-            decorationColor: Colors.blue,
-            decorationThickness: 2,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        actions: [ThemeSwitchButton()],
-      ),
+      appBar: MyAppBar(text: "TRACKER"),
       body: StreamBuilder<QuerySnapshot>(
         stream: fireStoreService.getNotesStream(),
         builder: (context, snapshot) {
@@ -122,6 +108,43 @@ class _HomeAtivityState extends State<HomeActivity> {
             }
           }
 
+          // Filtering notes which are supposed to be displayed
+          List<DocumentSnapshot> filteredNotes = [];
+          if (snapshot.hasData && snapshot.data!.docs.isNotEmpty)
+            notesList = snapshot.data!.docs;
+
+          // Filter notes based on dayLimit and favourite Status
+          // Replace your current filtering logic with this:
+          filteredNotes =
+              notesList.where((doc) {
+                Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+                // Always show favorites
+                if (data['isRenewable'] == true) return true;
+
+                // Get creation timestamp
+                Timestamp? timestamp = data['timestamp'];
+                if (timestamp == null) return false;
+
+                DateTime createdAt = timestamp.toDate();
+
+                // Normalize dates to midnight for accurate comparison
+                DateTime createdAtDate = DateTime(
+                  createdAt.year,
+                  createdAt.month,
+                  createdAt.day,
+                );
+                int dayLimit = data['dayLimit'] ?? 1;
+
+                // Calculate expiration date (midnight after last valid day)
+                DateTime expirationDate = createdAtDate.add(
+                  Duration(days: dayLimit),
+                );
+
+                // Check if today is before expiration date
+                return today_date.isBefore(expirationDate);
+              }).toList();
+
           // Calculate start date (last 3 months)
           DateTime startDate = DateTime.now().subtract(Duration(days: 90));
 
@@ -136,8 +159,9 @@ class _HomeAtivityState extends State<HomeActivity> {
                   datasets: heatmapDatasets,
                 ),
               ),
+
               // Notes List
-              if (notesList.isEmpty)
+              if (filteredNotes.isEmpty)
                 Expanded(
                   child: Center(child: Text("No notes yet. Tap + to add one!")),
                 )
@@ -145,13 +169,17 @@ class _HomeAtivityState extends State<HomeActivity> {
                 Expanded(
                   child: ListView.builder(
                     shrinkWrap: true,
-                    itemCount: notesList.length,
+                    itemCount: filteredNotes.length,
                     itemBuilder: (context, index) {
-                      DocumentSnapshot document = notesList[index];
+                      DocumentSnapshot document = filteredNotes[index];
                       String docID = document.id;
                       Map<String, dynamic> data =
                           document.data() as Map<String, dynamic>;
                       String noteText = data['note'];
+
+                      // This is used to track if the task is favourite or not by the user
+                      bool isRenewable = data['isRenewable'] ?? false;
+
                       Map<String, dynamic> completions =
                           (data['completions'] as Map<String, dynamic>?) ?? {};
                       bool isCompletedToday =
@@ -176,6 +204,19 @@ class _HomeAtivityState extends State<HomeActivity> {
                         deleteHabit: (context) => deleteHabitBox(docID),
                         totalDuration: totalDuration,
                         anyTimerRunningNotifier: anyTimerRunningNotifier,
+                        toggleFavorite: () async {
+                          await fireStoreService.toggleFavorite(
+                            docID,
+                            isRenewable,
+                          );
+                          if (!isRenewable) {
+                            Fluttertoast.showToast(
+                              msg: "Task will renew each day",
+                              gravity: ToastGravity.BOTTOM,
+                            );
+                          }
+                        },
+                        isRenewable: isRenewable,
                         // toggleTimer: (context) {
                         //   fireStoreService.toggleTimer(data, docID);
                         // },
@@ -195,7 +236,7 @@ class _HomeAtivityState extends State<HomeActivity> {
                 isRunning
                     ? () {
                       Fluttertoast.showToast(
-                        msg: "Cannot add a task while a timer is running",
+                        msg: "Finish the timer to add a task",
                         gravity: ToastGravity.BOTTOM,
                       );
                     }

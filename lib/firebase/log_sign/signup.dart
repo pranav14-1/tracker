@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:tracker/components/password_login.dart';
+import 'package:tracker/components/login_component/password_login.dart';
 import 'package:tracker/theme/switchButton.dart';
 import 'package:tracker/firebase/log_sign/auth.dart';
 import '../../components/dialog_box.dart';

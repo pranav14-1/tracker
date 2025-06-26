@@ -51,6 +51,7 @@ dependencies:
   percent_indicator: 
   fluttertoast: ^8.2.12
   table_calendar: ^3.2.0
+  animated_icon_switch: ^0.0.2
 
 dev_dependencies:
   flutter_test:

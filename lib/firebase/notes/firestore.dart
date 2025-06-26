@@ -28,6 +28,8 @@ class FireStoreService {
       'note': note,
       'timestamp': Timestamp.now(),
       'completions': {},
+      'dayLimit': 1,
+      'isRenewable': false,
     };
 
     if (durationMins != null && durationMins > 0) {
@@ -38,7 +40,7 @@ class FireStoreService {
       });
     }
 
-    await _userNotes.add(noteData); 
+    await _userNotes.add(noteData);
   }
 
   /// Toggles completion for the given note on a specific date
@@ -71,7 +73,11 @@ class FireStoreService {
   }
 
   /// Updates a note's text and optionally its timer
-  Future<void> updateNotes(String docID, String newNote, [int? durationMins]) async {
+  Future<void> updateNotes(
+    String docID,
+    String newNote, [
+    int? durationMins,
+  ]) async {
     final Map<String, dynamic> updateData = {
       'note': newNote,
       'timestamp': Timestamp.now(),
@@ -91,39 +97,14 @@ class FireStoreService {
     await _userNotes.doc(docID).delete();
   }
 
-  /// Saves the timestamp of the first app launch to the user document
-  Future<void> saveFirstLaunchTime() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final userDoc = FirebaseFirestore.instance
-        .collection('user_notes')
-        .doc(user.uid);
-
-    final docSnapshot = await userDoc.get();
-
-    if (!docSnapshot.exists || !(docSnapshot.data()?['firstLaunchTime'] is Timestamp)) {
-      await userDoc.set({
-        'firstLaunchTime': Timestamp.now(),
-      }, SetOptions(merge: true));
-    }
-  }
-
-  /// Returns the first launch time for the current user
-  Future<Timestamp?> getFirstLaunchTime() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return null;
-
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('user_notes')
-        .doc(user.uid)
-        .get();
-
-    return docSnapshot.data()?['firstLaunchTime'];
+  // Toggle the note as favourite or not
+  Future<void> toggleFavorite(String docID, bool CurrentStatus) async {
+    await _userNotes.doc(docID).update({
+      'isRenewable' : !CurrentStatus,
+    });
   }
 
   // Start the timer and save the data
-
 
   /// Starts or pauses the timer on a note
   Future<void> toggleTimer(Map<String, dynamic> task, String docId) async {
@@ -142,10 +123,7 @@ class FireStoreService {
       });
     } else {
       // START: Begin/resume timer
-      await docRef.update({
-        'isRunning': true,
-        'startTime': Timestamp.now(),
-      });
+      await docRef.update({'isRunning': true, 'startTime': Timestamp.now()});
     }
   }
 

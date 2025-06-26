@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tracker/components/my_app_bar.dart';
 import 'package:tracker/components/userTile.dart';
 import 'package:tracker/firebase/chat/chatPage.dart';
 import 'package:tracker/firebase/chat/chat_service.dart';
@@ -14,18 +15,7 @@ class CommunityPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'COM-N-CON',
-          style: TextStyle(
-            color: Colors.blue,
-            fontSize: 25,
-            decoration: TextDecoration.underline,
-            decorationColor: Colors.blue,
-            decorationThickness: 2,
-          ),
-        ),
-      ),
+      appBar: MyAppBar(text: 'COM-N-CON'),
       body: SafeArea(child: builderList()),
     );
   }

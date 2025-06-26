@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tracker/components/login_component/password_login.dart';
 import 'package:tracker/firebase/log_sign/auth.dart';
 import 'package:tracker/components/dialog_box.dart';
 import 'package:tracker/firebase/log_sign/forgot.dart';
@@ -131,33 +132,10 @@ class _LogInState extends State<LogIn> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      TextField(
-                        controller: password,
-                        focusNode: _passwordNode,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          suffixIcon:
-                              _isPasswordFocused
-                                  ? IconButton(
-                                    onPressed:
-                                        () => setState(
-                                          () =>
-                                              _obscurePassword =
-                                                  !_obscurePassword,
-                                        ),
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                  )
-                                  : null,
-                        ),
+                      PasswordLogin(
+                        password: password,
+                        passwordNode: _passwordNode,
+                        labelledText: 'Password',
                       ),
                       Align(
                         alignment: Alignment.centerRight,
