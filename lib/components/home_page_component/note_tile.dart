@@ -301,15 +301,19 @@ class _NoteTileState extends State<NoteTile> {
                 ],
               ),
               leading: Checkbox(
-                activeColor: Colors.blue,
+                activeColor: Colors.grey,
                 value: widget.isCompleted,
                 onChanged: widget.onChanged,
               ),
               trailing: IconButton(
                 onPressed: widget.toggleFavorite,
                 icon: Icon(Icons.autorenew),
-                color: 
-                    widget.isRenewable ? Colors.blueGrey : Colors.grey,
+                color:
+                    widget.isRenewable
+                        ? (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black)
+                        : Colors.grey.shade600,
               ),
             ),
           ),
