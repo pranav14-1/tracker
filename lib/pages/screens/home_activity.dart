@@ -5,6 +5,8 @@ import 'package:tracker/components/my_heat_map.dart';
 import 'package:tracker/components/note_tile.dart';
 import 'package:tracker/components/dialogBox.dart';
 import 'package:tracker/firebase/notes/firestore.dart';
+import 'package:tracker/services/note_CRUD_functions.dart';
+import 'package:tracker/services/note_class/note.dart';
 import 'package:tracker/theme/switchButton.dart';
 import 'package:intl/intl.dart';
 import 'package:tracker/theme/themeSwitch.dart';
@@ -25,84 +27,20 @@ class _HomeAtivityState extends State<HomeActivity> {
   final noteController = TextEditingController();
   final durationController = TextEditingController();
 
+  // This is the class which holds the basic component of note adding and deleting
+  late TaskDialogParams params;
+
   bool isCompleted = false;
 
   // firestore service
   final FireStoreService fireStoreService = FireStoreService();
 
-  void addNewTask() async {
-    final note = noteController.text.trim();
-    final durationText = durationController.text.trim();
-    final durationMins = int.tryParse(durationText);
-    // add a new note to the server
-    if (note.isNotEmpty) {
-      await fireStoreService.addNote(note, durationMins);
 
-      // Clear inputs
-      noteController.clear();
-      durationController.clear();
-
-      // Close the dialog or screen
-      Navigator.pop(context);
-    }
-  }
-
-  // edit habit box
-  void editHabitBox(String docID, String noteText, int? totalDuration) {
-    // set the controller's text to the current note's name
-    noteController.text = noteText;
-    durationController.text =
-        totalDuration != null ? (totalDuration ~/ 60).toString() : '';
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return TaskDialog(
-          noteController: noteController,
-          durationController: durationController,
-          onAdd: () {
-            final note = noteController.text.trim();
-            final durationText = durationController.text.trim();
-            final durationMins = int.tryParse(durationText);
-            fireStoreService.updateNotes(docID, note, durationMins);
-            Navigator.pop(context);
-          },
-          onCancel: Navigator.of(context).pop,
-          onAddText: "Update",
-        );
-      },
-    );
-  }
-
-  void deleteHabitBox(String docID) {
-    fireStoreService.deleteNote(docID);
-  }
 
   void toggleValue() {
     setState(() {
       isCompleted = !isCompleted;
     });
-  }
-
-  void newTask() {
-    noteController.clear();
-    durationController.clear();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return TaskDialog(
-          noteController: noteController,
-          durationController: durationController,
-          onAdd: addNewTask,
-          onAddText: "Add",
-          onCancel: () {
-            noteController.clear();
-            durationController.clear();
-            Navigator.of(context).pop();
-          },
-        );
-      },
-    );
   }
 
   late ValueNotifier<bool> anyTimerRunningNotifier;
@@ -111,6 +49,11 @@ class _HomeAtivityState extends State<HomeActivity> {
   void initState() {
     super.initState();
     anyTimerRunningNotifier = ValueNotifier(false);
+    params = TaskDialogParams(
+      context: context,
+      noteController: noteController,
+      durationController: durationController,
+    );
   }
 
   @override
@@ -224,8 +167,12 @@ class _HomeAtivityState extends State<HomeActivity> {
                           await fireStoreService.markCompletion(docID, today);
                         },
                         editHabit:
-                            (context) =>
-                                editHabitBox(docID, noteText, totalDuration),
+                            (context) => editHabitBox(
+                              docID: docID,
+                              noteText: noteText,
+                              totalDuration: totalDuration,
+                              params: params,
+                            ),
                         deleteHabit: (context) => deleteHabitBox(docID),
                         totalDuration: totalDuration,
                         anyTimerRunningNotifier: anyTimerRunningNotifier,
@@ -252,7 +199,9 @@ class _HomeAtivityState extends State<HomeActivity> {
                         gravity: ToastGravity.BOTTOM,
                       );
                     }
-                    : newTask,
+                    : () {
+                      newTask(params: params);
+                    },
             backgroundColor: Colors.white,
             foregroundColor: Colors.blue,
             child: const Icon(Icons.add),
