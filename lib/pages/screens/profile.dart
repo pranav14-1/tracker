@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tracker/components/my_app_bar.dart';
 import 'package:tracker/firebase/log_sign/auth.dart';
+import 'package:tracker/components/home_page_component/note_with_timer.dart';
+import 'package:tracker/testing_services/test_timer.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -42,6 +44,7 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Container(child: Text("Select Theme Colour")),
+            RectangularTimer(duration: Duration(seconds: 15),),
           ],
         ),
       ),

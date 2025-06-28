@@ -231,21 +231,24 @@ class _HomeAtivityState extends State<HomeActivity> {
       floatingActionButton: ValueListenableBuilder<bool>(
         valueListenable: anyTimerRunningNotifier,
         builder: (context, isRunning, _) {
-          return FloatingActionButton(
-            onPressed:
-                isRunning
-                    ? () {
-                      Fluttertoast.showToast(
-                        msg: "Finish the timer to add a task",
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    }
-                    : () {
-                      newTask(params: params);
-                    },
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.blue,
-            child: const Icon(Icons.add),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 15.0),
+            child: FloatingActionButton(
+              onPressed:
+                  isRunning
+                      ? () {
+                        Fluttertoast.showToast(
+                          msg: "Finish the timer to add a task",
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      }
+                      : () {
+                        newTask(params: params);
+                      },
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.blue,
+              child: const Icon(Icons.add),
+            ),
           );
         },
       ),

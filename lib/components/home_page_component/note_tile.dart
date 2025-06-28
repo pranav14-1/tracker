@@ -1,7 +1,9 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tracker/components/home_page_component/note_without_timer.dart';
+import 'package:tracker/components/home_page_component/note_with_timer.dart';
 
 class NoteTile extends StatefulWidget {
   final String text;
@@ -33,100 +35,135 @@ class NoteTile extends StatefulWidget {
   State<NoteTile> createState() => _NoteTileState();
 }
 
-class _NoteTileState extends State<NoteTile> {
-  Timer? _timer;
+class _NoteTileState extends State<NoteTile>
+    with SingleTickerProviderStateMixin {
+  late AnimationController animationController;
+  TimerState timerState = TimerState.stopped;
+  Duration remainingDuration = Duration.zero;
   int passedSeconds = 0;
   bool isRunning = false;
   bool isPaused = false;
-
   Duration _elapsed = Duration.zero;
-  Duration _pausedDuration = Duration.zero;
-  Stopwatch stopwatch = Stopwatch();
+  late Ticker _ticker; // Changed to nullable
 
-  String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  // This is to make sure that the controller gets the new value every time when the timer runs or gets over
+  @override
+  void didUpdateWidget(NoteTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.totalDuration != oldWidget.totalDuration &&
+        widget.totalDuration != null) {
+      // Update controller duration
+      animationController.duration = Duration(seconds: widget.totalDuration!);
+
+      // Reset timer state
+      if (timerState != TimerState.stopped) {
+        _stopTimer();
+      }
+      remainingDuration = Duration(seconds: widget.totalDuration!);
+    }
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.totalDuration != null) {
+      // Initialize for countdown mode
+      animationController =
+          AnimationController(
+              vsync: this,
+              duration: Duration(seconds: widget.totalDuration!),
+            )
+            ..addListener(
+              () => setState(() {
+                remainingDuration =
+                    Duration(seconds: widget.totalDuration!) *
+                    (1 - animationController.value);
+              }),
+            )
+            ..addStatusListener((status) {
+              if (status == AnimationStatus.completed) {
+                _stopTimer();
+                if (widget.onChanged != null && !widget.isCompleted) {
+                  widget.onChanged!(true);
+                }
+              }
+            });
+    } else {
+      // Initialize for counter mode
+      _ticker = Ticker((elapsed) {
+        setState(() {
+          _elapsed = elapsed;
+          passedSeconds = elapsed.inSeconds;
+        });
+      });
+    }
   }
 
   void _startTimer() {
-    _timer?.cancel();
-    stopwatch
-      ..reset()
-      ..start();
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _elapsed = _pausedDuration + stopwatch.elapsed;
-
-        //Countdown mode: check if time is up
-        if (widget.totalDuration != null &&
-            _elapsed.inSeconds >= widget.totalDuration!) {
-          _stopTimer();
-
-          //auto-complete if timer finished
-          if (widget.onChanged != null && widget.isCompleted == false) {
-            widget.onChanged!(true);
-          }
-        }
-
-        //Counter-update passedSeconds
-        if (widget.totalDuration == null) {
-          passedSeconds = _elapsed.inSeconds;
-        }
-      });
-    });
-
+    if (widget.totalDuration != null) {
+      // Countdown mode
+      if (timerState == TimerState.stopped) {
+        animationController.forward(from: 0);
+      } else if (timerState == TimerState.paused) {
+        animationController.forward();
+      }
+    } else {
+      // Counter mode
+      _ticker.start();
+    }
     setState(() {
+      timerState = TimerState.running;
       isRunning = true;
       isPaused = false;
-      widget.anyTimerRunningNotifier?.value = true;
     });
   }
 
   void _pauseTimer() {
-    _timer?.cancel();
-    stopwatch.stop();
+    if (widget.totalDuration != null) {
+      animationController.stop();
+    } else {
+      _ticker.stop();
+    }
     setState(() {
-      _pausedDuration += stopwatch.elapsed;
+      timerState = TimerState.paused;
       isRunning = false;
       isPaused = true;
-      widget.anyTimerRunningNotifier?.value = true;
     });
   }
 
   void _stopTimer() {
-    _timer?.cancel();
-    stopwatch
-      ..stop()
-      ..reset();
-    setState(() {
-      _pausedDuration = Duration.zero;
+    if (widget.totalDuration != null) {
+      animationController.reset();
+      if (widget.totalDuration != null) {
+        remainingDuration = Duration(seconds: widget.totalDuration!);
+      }
+    } else {
+      _ticker.stop();
       _elapsed = Duration.zero;
+      passedSeconds = 0;
+    }
+    setState(() {
+      timerState = TimerState.stopped;
       isPaused = false;
       isRunning = false;
-      widget.anyTimerRunningNotifier?.value = false;
     });
-    //mark the task as completed if counter stopped
-    if (widget.totalDuration == null &&
-        widget.onChanged != null &&
-        widget.isCompleted == false) {
-      widget.onChanged!(true);
-    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    stopwatch.stop();
+    if (widget.totalDuration != null) {
+      animationController.dispose();
+    } else {
+      _ticker.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isCountDown = widget.totalDuration != null;
-    final remaining = (widget.totalDuration ?? 0) - _elapsed.inSeconds;
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
       child: Slidable(
@@ -204,121 +241,38 @@ class _NoteTileState extends State<NoteTile> {
             ),
           ],
         ),
-        child: GestureDetector(
-          onTap: () {
-            if (widget.onChanged != null &&
-                isRunning == false &&
-                isPaused == false) {
-              widget.onChanged!(!widget.isCompleted);
-            }
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              color:
-                  widget.isCompleted
-                      ? Colors.blue
-                      : Theme.of(context).colorScheme.secondary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.all(12),
-            child: ListTile(
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.text,
-                    style: TextStyle(
-                      color:
-                          widget.isCompleted
-                              ? Colors.white
-                              : Theme.of(context).colorScheme.inversePrimary,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  if (widget.totalDuration != null)
-                    Text(
-                      "${(widget.totalDuration! / 60).round()} min timer",
-                      style: TextStyle(
-                        color:
-                            widget.isCompleted
-                                ? Colors.white70
-                                : Colors.grey[500],
-                        fontSize: 12,
-                      ),
-                    ),
-                  //condition to check if runnig or pasued or completed
-                  //also check if the counter was started or not
-                  if (isRunning ||
-                      isPaused ||
-                      (widget.totalDuration == null &&
-                          widget.isCompleted &&
-                          passedSeconds > 0))
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6.0),
-                      child:
-                          isCountDown
-                              ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Time left: ${_formatTime(remaining > 0 ? remaining : 0)}",
-                                    style: TextStyle(
-                                      color:
-                                          widget.isCompleted
-                                              ? Colors.white70
-                                              : Colors.grey[500],
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  LinearProgressIndicator(
-                                    value:
-                                        remaining > 0
-                                            ? 1 -
-                                                (remaining /
-                                                    widget.totalDuration!)
-                                            : 1,
-                                    minHeight: 6,
-                                    backgroundColor: Colors.grey[300],
-                                    color: Colors.blue,
-                                  ),
-                                ],
-                              )
-                              : Text(
-                                widget.isCompleted
-                                    ? "Work done for ${(passedSeconds / 60).ceil()} minutes"
-                                    : "Active for: ${_formatTime(passedSeconds)}",
-                                style: TextStyle(
-                                  color:
-                                      widget.isCompleted
-                                          ? Colors.white70
-                                          : Colors.grey[500],
-                                  fontSize: 12,
-                                ),
-                              ),
-                    ),
-                ],
-              ),
-              leading: Checkbox(
-                activeColor: Colors.grey,
-                value: widget.isCompleted,
-                onChanged: widget.onChanged,
-              ),
-              trailing: IconButton(
-                onPressed: widget.toggleFavorite,
-                icon: Icon(Icons.autorenew),
-                color:
-                    widget.isRenewable
-                        ? (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black)
-                        : Colors.grey.shade600,
-              ),
-            ),
-          ),
-        ),
+        child:
+            isRunning || isPaused
+                // if it is timer function then run the timer
+                ? MyTimer(
+                  animationController: animationController,
+                  editHabit: widget.editHabit,
+                  deleteHabit: widget.deleteHabit,
+                  isCompleted: widget.isCompleted,
+                  duration: Duration(minutes: 15),
+                  isPaused: isPaused,
+                  isRunning: isRunning,
+                  startTimer: _startTimer,
+                  pauseTimer: _pauseTimer,
+                  stopTimer: _stopTimer,
+                  remainingDuration: remainingDuration,
+                )
+                // Normal
+                : NoteWithoutTimer(
+                  totalDuration: widget.totalDuration,
+                  isPaused: isPaused,
+                  isRunning: isRunning,
+                  onChanged: widget.onChanged,
+                  isCompleted: widget.isCompleted,
+                  text: widget.text,
+                  passedSeconds: passedSeconds,
+                  toggleFavorite: widget.toggleFavorite,
+                  isRenewable: widget.isRenewable,
+                  elapsed: _elapsed,
+                ),
       ),
     );
   }
 }
+
+enum TimerState { stopped, running, paused }
