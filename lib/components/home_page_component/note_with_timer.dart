@@ -1,42 +1,93 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:flutter/scheduler.dart';
 
 class MyTimer extends StatefulWidget {
-  final Duration? duration; // Null = count up mode
-  final bool isRunning;
-  final bool isPaused;
-  final void Function(BuildContext)? editHabit;
-  final void Function(BuildContext)? deleteHabit;
-  final bool isCompleted;
-  final void Function()? startTimer;
-  final void Function()? pauseTimer;
-  final void Function()? stopTimer;
-  final AnimationController animationController;
-  Duration remainingDuration;
-  MyTimer({
-    super.key,
-    required this.animationController,
-    required this.duration,
-    required this.remainingDuration,
-    required this.isPaused,
-    required this.isRunning,
-    required this.isCompleted,
-    required this.deleteHabit,
-    required this.editHabit,
-    required this.startTimer,
-    required this.pauseTimer,
-    required this.stopTimer,
-  });
+  final Duration? duration; // null means counter mode
+  const MyTimer({super.key, this.duration});
 
   @override
-  State<MyTimer> createState() => _MyTimerState();
+  State<MyTimer> createState() => MyTimerState();
 }
 
-class _MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
+class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  TimerState _state = TimerState.stopped;
+  Duration _remainingDuration = Duration.zero;
 
-  // for counter mode
+  // For counter mode
   int elapsedSeconds = 0;
-  final int CycleDurationSeconds = 50 * 60; // 50 minutes
+  final int cycleDurationSeconds = 50 * 60; // 50 minutes
+  late final Ticker _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.duration != null) {
+      // Countdown mode
+      _remainingDuration = widget.duration!;
+      _controller = AnimationController(vsync: this, duration: widget.duration)
+        ..addListener(() {
+          setState(() {
+            _remainingDuration = widget.duration! * (1 - _controller.value);
+          });
+        });
+    } else {
+      // Counter mode
+      _ticker = createTicker((elapsed) {
+        setState(() {
+          elapsedSeconds = elapsed.inSeconds;
+        });
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.duration != null) {
+      _controller.dispose();
+    } else {
+      _ticker.dispose();
+    }
+    super.dispose();
+  }
+
+  void startTimer() {
+    print("THE START TIMER IS GETTING CALLED");
+    if (widget.duration != null) {
+      // Countdown mode
+      if (_state == TimerState.stopped) {
+        _controller.forward(from: 0);
+      } else if (_state == TimerState.paused) {
+        _controller.forward();
+      }
+    } else {
+      // Counter mode
+      _ticker.start();
+    }
+    setState(() => _state = TimerState.running);
+  }
+
+  void pauseTimer() {
+    print("THE PAUSE TIMER IS GETTING CALLED");
+    if (widget.duration != null) {
+      _controller.stop();
+    } else {
+      _ticker.stop();
+    }
+    setState(() => _state = TimerState.paused);
+  }
+
+  void stopTimer() {
+    print("THE STOP TIMER IS GETTING CALLED");
+    if (widget.duration != null) {
+      _controller.reset();
+      _remainingDuration = widget.duration!;
+    } else {
+      _ticker.stop();
+      elapsedSeconds = 0;
+    }
+    setState(() => _state = TimerState.stopped);
+  }
 
   String _formatTime(Duration duration) {
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -50,80 +101,54 @@ class _MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
     String timeText;
 
     if (widget.duration != null) {
-      // Count down mode
-      progress = widget.animationController.value;
-      timeText = _formatTime(widget.remainingDuration);
+      // Countdown mode
+      progress = _controller.value;
+      timeText = _formatTime(_remainingDuration);
     } else {
-      // Counter mode with 50-minute cycle
-      progress = (elapsedSeconds % CycleDurationSeconds) / CycleDurationSeconds;
+      // Counter mode with 50-minute cycles
+      progress = (elapsedSeconds % cycleDurationSeconds) / cycleDurationSeconds;
       timeText = _formatTime(Duration(seconds: elapsedSeconds));
     }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Slidable(
-          startActionPane: ActionPane(
-            motion: StretchMotion(),
-            children: [
-              if (!widget.isRunning)
-                SlidableAction(
-                  onPressed: (_) => widget.startTimer!(),
-                  icon: Icons.play_circle_fill,
-                  backgroundColor: Colors.green,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              if (widget.isRunning)
-                SlidableAction(
-                  onPressed: (_) => widget.pauseTimer!(),
-                  icon: Icons.pause_circle_filled,
-                  backgroundColor: Colors.orange,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              if (widget.isRunning || widget.isPaused)
-                SlidableAction(
-                  onPressed: (_) => widget.stopTimer!(),
-                  icon: Icons.stop_circle,
-                  backgroundColor: Colors.red,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-            ],
+        Container(
+          height: 80,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: Colors.blue, width: 2),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Container(
-            height: 80,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.blue, width: 2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            alignment: Alignment.center,
-            child: Stack(
-              children: [
-                //Progress bar fill (cycles every 50 minutes in counter mode)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: FractionallySizedBox(
-                    widthFactor: progress,
-                    child: Container(color: Colors.blue, height: 80),
+          alignment: Alignment.center,
+          child: Stack(
+            children: [
+              // Progress bar fill (cycles every 50 minutes in counter mode)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: FractionallySizedBox(
+                  widthFactor: progress,
+                  child: Container(color: Colors.blue, height: 60),
+                ),
+              ),
+              // Timer text
+              Center(
+                child: Text(
+                  timeText,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
                   ),
                 ),
-                // Timer Text
-                Center(
-                  child: Text(
-                    timeText,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 }
+
+enum TimerState { stopped, running, paused }
