@@ -44,7 +44,7 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Container(child: Text("Select Theme Colour")),
-            RectangularTimer(duration: Duration(seconds: 15),),
+            RectangularTimer(duration: Duration(seconds: 900),),
           ],
         ),
       ),
