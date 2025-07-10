@@ -3,7 +3,16 @@ import 'package:flutter/scheduler.dart';
 
 class MyTimer extends StatefulWidget {
   final Duration? duration; // null means counter mode
-  const MyTimer({super.key, this.duration});
+  final void Function(bool?)? onChanged;
+  final bool isCompleted;
+  final void Function()? timerStoppingScene;
+  const MyTimer({
+    super.key,
+    this.duration,
+    required this.isCompleted,
+    required this.onChanged,
+    required this.timerStoppingScene,
+  });
 
   @override
   State<MyTimer> createState() => MyTimerState();
@@ -25,12 +34,19 @@ class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
     if (widget.duration != null) {
       // Countdown mode
       _remainingDuration = widget.duration!;
-      _controller = AnimationController(vsync: this, duration: widget.duration)
-        ..addListener(() {
-          setState(() {
-            _remainingDuration = widget.duration! * (1 - _controller.value);
-          });
-        });
+      _controller =
+          AnimationController(vsync: this, duration: widget.duration)
+            ..addListener(() {
+              setState(() {
+                _remainingDuration = widget.duration! * (1 - _controller.value);
+              });
+            })
+            ..addStatusListener((status) {
+              if (status == AnimationStatus.completed) {
+                widget.onChanged!(!widget.isCompleted);
+                widget.timerStoppingScene!();
+              }
+            });
     } else {
       // Counter mode
       _ticker = createTicker((elapsed) {
@@ -52,7 +68,6 @@ class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
   }
 
   void startTimer() {
-    print("THE START TIMER IS GETTING CALLED");
     if (widget.duration != null) {
       // Countdown mode
       if (_state == TimerState.stopped) {
@@ -68,7 +83,6 @@ class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
   }
 
   void pauseTimer() {
-    print("THE PAUSE TIMER IS GETTING CALLED");
     if (widget.duration != null) {
       _controller.stop();
     } else {
@@ -78,7 +92,6 @@ class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
   }
 
   void stopTimer() {
-    print("THE STOP TIMER IS GETTING CALLED");
     if (widget.duration != null) {
       _controller.reset();
       _remainingDuration = widget.duration!;
@@ -88,6 +101,8 @@ class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
     }
     setState(() => _state = TimerState.stopped);
   }
+
+  double height_value = 80;
 
   String _formatTime(Duration duration) {
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -114,7 +129,7 @@ class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          height: 80,
+          height: height_value,
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
@@ -126,10 +141,10 @@ class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
             children: [
               // Progress bar fill (cycles every 50 minutes in counter mode)
               ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
                 child: FractionallySizedBox(
                   widthFactor: progress,
-                  child: Container(color: Colors.blue, height: 60),
+                  child: Container(color: Colors.blue, height: height_value),
                 ),
               ),
               // Timer text
