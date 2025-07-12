@@ -7,8 +7,6 @@ class NoteWithoutTimer extends StatefulWidget {
   final bool isCompleted;
   final String text;
   final int? totalDuration; // in seconds
-  final int passedSeconds;
-  final Duration elapsed;
   final bool isRenewable;
   final void Function()? toggleFavorite;
 
@@ -20,8 +18,6 @@ class NoteWithoutTimer extends StatefulWidget {
     required this.onChanged,
     required this.isCompleted,
     required this.text,
-    required this.passedSeconds,
-    required this.elapsed,
     required this.isRenewable,
     required this.toggleFavorite,
   });
@@ -30,19 +26,10 @@ class NoteWithoutTimer extends StatefulWidget {
   State<NoteWithoutTimer> createState() => _NoteWithoutTimerState();
 }
 
-class _NoteWithoutTimerState extends State<NoteWithoutTimer> {
-  String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-  }
-
-  
+class _NoteWithoutTimerState extends State<NoteWithoutTimer> {  
 
   @override
   Widget build(BuildContext context) {
-    final isCountDown = widget.totalDuration != null;
-    final remaining = (widget.totalDuration ?? 0) - widget.elapsed.inSeconds;
 
     return GestureDetector(
       onTap: () {
@@ -84,56 +71,6 @@ class _NoteWithoutTimerState extends State<NoteWithoutTimer> {
                         widget.isCompleted ? Colors.white70 : Colors.grey[500],
                     fontSize: 12,
                   ),
-                ),
-              //condition to check if runnig or pasued or completed
-              //also check if the counter was started or not
-              if (widget.isRunning ||
-                  widget.isPaused ||
-                  (widget.totalDuration == null &&
-                      widget.isCompleted &&
-                      widget.passedSeconds > 0))
-                Padding(
-                  padding: const EdgeInsets.only(top: 6.0),
-                  child:
-                      isCountDown
-                          ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Time left: ${_formatTime(remaining > 0 ? remaining : 0)}",
-                                style: TextStyle(
-                                  color:
-                                      widget.isCompleted
-                                          ? Colors.white70
-                                          : Colors.grey[500],
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              LinearProgressIndicator(
-                                value:
-                                    remaining > 0
-                                        ? 1 -
-                                            (remaining / widget.totalDuration!)
-                                        : 1,
-                                minHeight: 6,
-                                backgroundColor: Colors.grey[300],
-                                color: Colors.blue,
-                              ),
-                            ],
-                          )
-                          : Text(
-                            widget.isCompleted
-                                ? "Work done for ${(widget.passedSeconds / 60).ceil()} minutes"
-                                : "Active for: ${_formatTime(widget.passedSeconds)}",
-                            style: TextStyle(
-                              color:
-                                  widget.isCompleted
-                                      ? Colors.white70
-                                      : Colors.grey[500],
-                              fontSize: 12,
-                            ),
-                          ),
                 ),
             ],
           ),

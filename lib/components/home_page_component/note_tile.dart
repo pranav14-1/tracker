@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tracker/components/home_page_component/note_without_timer.dart';
@@ -40,17 +39,14 @@ class _NoteTileState extends State<NoteTile> {
   final GlobalKey<MyTimerState> childKey = GlobalKey<MyTimerState>();
 
   Duration remainingDuration = Duration.zero;
-  int passedSeconds = 0;
   bool isRunning = false;
   bool isPaused = false;
-  Duration _elapsed = Duration.zero;
 
   void _startTimer() {
     setState(() {
       isRunning = true;
       isPaused = false;
     });
-    // childKey.currentState?.startTimer();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       childKey.currentState?.startTimer();
     });
@@ -154,7 +150,16 @@ class _NoteTileState extends State<NoteTile> {
         child:
             isRunning || isPaused
                 // if it is timer function then run the timer
-                ? MyTimer(key: childKey)
+                ? MyTimer(
+                  key: childKey,
+                  isCompleted: widget.isCompleted,
+                  timerStoppingScene : _stopTimer,
+                  duration:
+                      widget.totalDuration != null
+                          ? Duration(seconds: widget.totalDuration!)
+                          : null,
+                  onChanged: widget.onChanged,
+                )
                 // Normal
                 : NoteWithoutTimer(
                   totalDuration: widget.totalDuration,
@@ -163,10 +168,8 @@ class _NoteTileState extends State<NoteTile> {
                   onChanged: widget.onChanged,
                   isCompleted: widget.isCompleted,
                   text: widget.text,
-                  passedSeconds: passedSeconds,
                   toggleFavorite: widget.toggleFavorite,
                   isRenewable: widget.isRenewable,
-                  elapsed: _elapsed,
                 ),
       ),
     );
