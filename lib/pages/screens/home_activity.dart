@@ -29,17 +29,8 @@ class _HomeAtivityState extends State<HomeActivity> {
   // This is the class which holds the basic component of note adding and deleting
   late TaskDialogParams params;
 
-  // used to track if the note is completed or not
-  bool isCompleted = false;
-
   // firestore service
   final FireStoreService fireStoreService = FireStoreService();
-
-  void toggleValue() {
-    setState(() {
-      isCompleted = !isCompleted;
-    });
-  }
 
   late ValueNotifier<bool> anyTimerRunningNotifier;
 
@@ -110,8 +101,9 @@ class _HomeAtivityState extends State<HomeActivity> {
 
           // Filtering notes which are supposed to be displayed
           List<DocumentSnapshot> filteredNotes = [];
-          if (snapshot.hasData && snapshot.data!.docs.isNotEmpty)
+          if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
             notesList = snapshot.data!.docs;
+          }
 
           // Filter notes based on dayLimit and favourite Status
           // Replace your current filtering logic with this:
