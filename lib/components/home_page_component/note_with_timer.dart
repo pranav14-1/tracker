@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
+import 'package:tracker/features/timer%20provider/timer_provider.dart';
 
 class MyTimer extends StatefulWidget {
-  final Duration? duration; // null means counter mode
+  final VoidCallback? onPause, onStop;
   final void Function(bool?)? onChanged;
   final bool isCompleted;
-  final void Function()? timerStoppingScene;
   const MyTimer({
     super.key,
-    this.duration,
     required this.isCompleted,
     required this.onChanged,
-    required this.timerStoppingScene,
+    required this.onPause,
+    required this.onStop,
   });
 
   @override
@@ -19,87 +19,63 @@ class MyTimer extends StatefulWidget {
 }
 
 class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  late AnimationController _animationController;
   TimerState _state = TimerState.stopped;
-  Duration _remainingDuration = Duration.zero;
 
-  // For counter mode
-  int elapsedSeconds = 0;
-  final int cycleDurationSeconds = 50 * 60; // 50 minutes
-  late final Ticker _ticker;
+  void _startAnimation(TimerProvider timer) {
+    final remaining = timer.initialDuration * (1 - timer.progress);
+    _animationController.duration =
+        remaining > Duration.zero ? remaining : Duration(seconds: 1);
+    _animationController.forward(from: _animationController.value);
+  }
+
+  void _pauseAnimation() => _animationController.stop();
+
+  void _resetAnimation() => _animationController.value = 0.0;
 
   @override
   void initState() {
     super.initState();
-    if (widget.duration != null) {
-      // Countdown mode
-      _remainingDuration = widget.duration!;
-      _controller =
-          AnimationController(vsync: this, duration: widget.duration)
-            ..addListener(() {
-              setState(() {
-                _remainingDuration = widget.duration! * (1 - _controller.value);
-              });
-            })
-            ..addStatusListener((status) {
-              if (status == AnimationStatus.completed) {
-                widget.onChanged!(!widget.isCompleted);
-                widget.timerStoppingScene!();
-              }
-            });
-    } else {
-      // Counter mode
-      _ticker = createTicker((elapsed) {
-        setState(() {
-          elapsedSeconds = elapsed.inSeconds;
-        });
-      });
+    final timer = Provider.of<TimerProvider>(context, listen: false);
+    _animationController =
+        AnimationController(
+            vsync: this,
+            value: timer.progress,
+            duration: timer.initialDuration,
+          )
+          ..addListener(() {
+            setState(() {});
+          })
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              widget.onChanged!(!widget.isCompleted);
+            }
+          });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final timer = Provider.of<TimerProvider>(context, listen: false);
+    if (!timer.isRunning) {
+      _animationController.value = timer.progress;
+    }
+  }
+
+  @override
+  void didUpdateWidget(MyTimer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final timer = Provider.of<TimerProvider>(context, listen: false);
+    if (!timer.isRunning) {
+      _animationController.value =
+          timer.progress; // Always restore position on widget update
     }
   }
 
   @override
   void dispose() {
-    if (widget.duration != null) {
-      _controller.dispose();
-    } else {
-      _ticker.dispose();
-    }
+    _animationController.dispose();
     super.dispose();
-  }
-
-  void startTimer() {
-    if (widget.duration != null) {
-      // Countdown mode
-      if (_state == TimerState.stopped) {
-        _controller.forward(from: 0);
-      } else if (_state == TimerState.paused) {
-        _controller.forward();
-      }
-    } else {
-      // Counter mode
-      _ticker.start();
-    }
-    setState(() => _state = TimerState.running);
-  }
-
-  void pauseTimer() {
-    if (widget.duration != null) {
-      _controller.stop();
-    } else {
-      _ticker.stop();
-    }
-    setState(() => _state = TimerState.paused);
-  }
-
-  void stopTimer() {
-    if (widget.duration != null) {
-      _controller.reset();
-      _remainingDuration = widget.duration!;
-    } else {
-      _ticker.stop();
-      elapsedSeconds = 0;
-    }
-    setState(() => _state = TimerState.stopped);
   }
 
   double height_value = 80;
@@ -112,17 +88,22 @@ class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    double progress;
-    String timeText;
+    final timer = Provider.of<TimerProvider>(context);
 
-    if (widget.duration != null) {
-      // Countdown mode
-      progress = _controller.value;
-      timeText = _formatTime(_remainingDuration);
-    } else {
-      // Counter mode with 50-minute cycles
-      progress = (elapsedSeconds % cycleDurationSeconds) / cycleDurationSeconds;
-      timeText = _formatTime(Duration(seconds: elapsedSeconds));
+    final timeText =
+        timer.mode == TimerMode.countdown
+            ? _formatTime(timer.remaining)
+            : _formatTime(Duration(seconds: timer.elapsed));
+
+    if (timer.isRunning && !_animationController.isAnimating) {
+      _startAnimation(timer);
+      _state = TimerState.running;
+    } else if (timer.isPaused && _animationController.isAnimating) {
+      _pauseAnimation();
+      _state = TimerState.paused;
+    } else if (timer.isStopped && _animationController.value != 0) {
+      _resetAnimation();
+      _state = TimerState.stopped;
     }
 
     return Column(
@@ -143,7 +124,7 @@ class MyTimerState extends State<MyTimer> with SingleTickerProviderStateMixin {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: FractionallySizedBox(
-                  widthFactor: progress,
+                  widthFactor: _animationController.value,
                   child: Container(color: Colors.blue, height: height_value),
                 ),
               ),

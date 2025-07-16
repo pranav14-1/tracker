@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 import 'package:tracker/components/home_page_component/note_without_timer.dart';
 import 'package:tracker/components/home_page_component/note_with_timer.dart';
+import 'package:tracker/features/timer%20provider/timer_provider.dart';
 
 class NoteTile extends StatefulWidget {
   final String text;
@@ -35,41 +37,12 @@ class NoteTile extends StatefulWidget {
 }
 
 class _NoteTileState extends State<NoteTile> {
-  // Creating key to use child functions of the timer
-  final GlobalKey<MyTimerState> childKey = GlobalKey<MyTimerState>();
 
   Duration remainingDuration = Duration.zero;
-  bool isRunning = false;
-  bool isPaused = false;
-
-  void _startTimer() {
-    setState(() {
-      isRunning = true;
-      isPaused = false;
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      childKey.currentState?.startTimer();
-    });
-  }
-
-  void _pauseTimer() {
-    childKey.currentState?.pauseTimer();
-    setState(() {
-      isPaused = true;
-      isRunning = false;
-    });
-  }
-
-  void _stopTimer() {
-    childKey.currentState?.stopTimer();
-    setState(() {
-      isRunning = false;
-      isPaused = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final timer = Provider.of<TimerProvider>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
       child: Slidable(
@@ -78,23 +51,23 @@ class _NoteTileState extends State<NoteTile> {
                 ? ActionPane(
                   motion: const StretchMotion(),
                   children: [
-                    if (!isRunning)
+                    if (!timer.isRunning)
                       SlidableAction(
-                        onPressed: (_) => _startTimer(),
+                        onPressed: (_) => timer.start(),
                         icon: Icons.play_circle_fill,
                         backgroundColor: Colors.green,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                    if (isRunning)
+                    if (timer.isRunning)
                       SlidableAction(
-                        onPressed: (_) => _pauseTimer(),
+                        onPressed: (_) => timer.pause(),
                         icon: Icons.pause_circle_filled,
                         backgroundColor: Colors.orange,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                    if (isRunning || isPaused)
+                    if (timer.isRunning || timer.isPaused)
                       SlidableAction(
-                        onPressed: (_) => _stopTimer(),
+                        onPressed: (_) => timer.stop(),
                         icon: Icons.stop_circle,
                         backgroundColor: Colors.red,
                         borderRadius: BorderRadius.circular(8),
@@ -108,7 +81,7 @@ class _NoteTileState extends State<NoteTile> {
             SlidableAction(
               //edit task
               onPressed: (_) {
-                if (isRunning || isPaused) {
+                if (timer.isRunning || timer.isPaused) {
                   //show toast while running
                   Fluttertoast.showToast(
                     msg: "Cannot edit a task while the timer is running",
@@ -131,7 +104,7 @@ class _NoteTileState extends State<NoteTile> {
             SlidableAction(
               //delete task
               onPressed: (_) {
-                if (isRunning || isPaused) {
+                if (timer.isRunning || timer.isPaused) {
                   //show toast while running
                   Fluttertoast.showToast(
                     msg: "Cannot delete a task while the timer is running",
@@ -147,24 +120,20 @@ class _NoteTileState extends State<NoteTile> {
             ),
           ],
         ),
-        child:
-            isRunning || isPaused
+        child: 
                 // if it is timer function then run the timer
+                timer.isPaused || timer.isRunning
                 ? MyTimer(
-                  key: childKey,
+                  onPause : timer.pause,
+                  onStop : timer.stop,
                   isCompleted: widget.isCompleted,
-                  timerStoppingScene : _stopTimer,
-                  duration:
-                      widget.totalDuration != null
-                          ? Duration(seconds: widget.totalDuration!)
-                          : null,
                   onChanged: widget.onChanged,
                 )
                 // Normal
                 : NoteWithoutTimer(
                   totalDuration: widget.totalDuration,
-                  isPaused: isPaused,
-                  isRunning: isRunning,
+                  isPaused: timer.isPaused,
+                  isRunning: timer.isRunning,
                   onChanged: widget.onChanged,
                   isCompleted: widget.isCompleted,
                   text: widget.text,

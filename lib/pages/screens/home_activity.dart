@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:tracker/components/home_page_component/my_heat_map.dart';
 import 'package:tracker/components/home_page_component/note_tile.dart';
 import 'package:tracker/components/my_app_bar.dart';
+import 'package:tracker/features/timer%20provider/timer_manager.dart';
+import 'package:tracker/features/timer%20provider/timer_provider.dart';
 import 'package:tracker/firebase/notes/firestore.dart';
 import 'package:tracker/services/note_CRUD_functions.dart';
 import 'package:tracker/services/note_class/note.dart';
@@ -180,38 +182,47 @@ class _HomeAtivityState extends State<HomeActivity> {
                       //Extract totalDuration (in seconds) from Firestore
                       int? totalDuration = data['totalDuration'];
 
-                      return NoteTile(
-                        isCompleted: isCompletedToday,
-                        text: noteText,
-                        onChanged: (value) async {
-                          await fireStoreService.markCompletion(docID, today);
-                        },
-                        editHabit:
-                            (context) => editHabitBox(
-                              docID: docID,
-                              noteText: noteText,
-                              totalDuration: totalDuration,
-                              params: params,
-                            ),
-                        deleteHabit: (context) => deleteHabitBox(docID),
-                        totalDuration: totalDuration,
-                        anyTimerRunningNotifier: anyTimerRunningNotifier,
-                        toggleFavorite: () async {
-                          await fireStoreService.toggleFavorite(
-                            docID,
-                            isRenewable,
-                          );
-                          if (!isRenewable) {
-                            Fluttertoast.showToast(
-                              msg: "Task will renew each day",
-                              gravity: ToastGravity.BOTTOM,
+                      return ChangeNotifierProvider.value(
+                        value: TimerManager.get(
+                          docID,
+                          totalDuration == null
+                              ? TimerMode.counter
+                              : TimerMode.countdown,
+                          Duration(seconds: totalDuration ?? 0),
+                        ),
+                        child: NoteTile(
+                          isCompleted: isCompletedToday,
+                          text: noteText,
+                          onChanged: (value) async {
+                            await fireStoreService.markCompletion(docID, today);
+                          },
+                          editHabit:
+                              (context) => editHabitBox(
+                                docID: docID,
+                                noteText: noteText,
+                                totalDuration: totalDuration,
+                                params: params,
+                              ),
+                          deleteHabit: (context) => deleteHabitBox(docID),
+                          totalDuration: totalDuration,
+                          anyTimerRunningNotifier: anyTimerRunningNotifier,
+                          toggleFavorite: () async {
+                            await fireStoreService.toggleFavorite(
+                              docID,
+                              isRenewable,
                             );
-                          }
-                        },
-                        isRenewable: isRenewable,
-                        // toggleTimer: (context) {
-                        //   fireStoreService.toggleTimer(data, docID);
-                        // },
+                            if (!isRenewable) {
+                              Fluttertoast.showToast(
+                                msg: "Task will renew each day",
+                                gravity: ToastGravity.BOTTOM,
+                              );
+                            }
+                          },
+                          isRenewable: isRenewable,
+                          // toggleTimer: (context) {
+                          //   fireStoreService.toggleTimer(data, docID);
+                          // },
+                        ),
                       );
                     },
                   ),
