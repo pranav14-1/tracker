@@ -195,6 +195,13 @@ class _HomeAtivityState extends State<HomeActivity> {
                           text: noteText,
                           onChanged: (value) async {
                             await fireStoreService.markCompletion(docID, today);
+                            TimerManager.remove(docID);
+                            // solution to the problem of having re starting the timer but not happening
+                            final timer = Provider.of<TimerProvider>(
+                              context,
+                              listen: false,
+                            );
+                            timer.stop();
                           },
                           editHabit:
                               (context) => editHabitBox(
