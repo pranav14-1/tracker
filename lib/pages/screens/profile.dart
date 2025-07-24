@@ -54,40 +54,46 @@ class _ProfilePageState extends State<ProfilePage> {
                           bubbleController.text = bubbleText;
                           final text = await showDialog<String>(
                             context: context,
-                            builder: (_) => AlertDialog(
-                              title: Text('Set Thought Bubble'),
-                              content: TextField(
-                                controller: bubbleController,
-                                autofocus: true,
-                                maxLength: 20,
-                                decoration: InputDecoration(
-                                  hintText: "Your thought… (max 20 chars)",
-                                  counterText: "",
+                            builder: (dialogCtx) => StatefulBuilder(
+                              builder: (ctx, setStateDialog) => AlertDialog(
+                                title: Text('Set Thought Bubble'),
+                                content: TextField(
+                                  controller: bubbleController,
+                                  autofocus: true,
+                                  maxLength: 20,
+                                  decoration: InputDecoration(
+                                    hintText: "Your thought… (max 20 chars)",
+                                    counterText: "",
+                                    suffixIcon: bubbleController.text.isNotEmpty
+                                        ? IconButton(
+                                            icon: Icon(Icons.clear),
+                                            onPressed: () {
+                                              bubbleController.clear();
+                                              setStateDialog(() {}); // for dialog's UI
+                                            },
+                                          )
+                                        : null,
+                                  ),
+                                  onChanged: (_) => setStateDialog(() {}),
                                 ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(ctx, bubbleController.text.trim()),
+                                    child: Text('Save'),
+                                  ),
+                                ],
                               ),
-                              actions: [
-                                TextButton(
-                                  child: Text('Clear'),
-                                  onPressed: () {
-                                    bubbleController.clear();
-                                    Navigator.pop(context, ''); // Return empty string
-                                  },
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('Cancel'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(context, bubbleController.text.trim()),
-                                  child: Text('Save'),
-                                ),
-                              ],
                             ),
                           );
-                          // Accept both normal save and clear
-                          setState(() {
-                            bubbleText = text ?? bubbleText;
-                          });
+                          if (text != null) {
+                            setState(() {
+                              bubbleText = text;
+                            });
+                          }
                           bubbleController.clear();
                         },
                         child: BubbleThought(
@@ -139,9 +145,19 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  StatTile(icon: Icons.local_fire_department, label: "Streak", value: "0", iconColor: Colors.orange),
+                  StatTile(
+                    icon: Icons.local_fire_department,
+                    label: "Streak",
+                    value: "0",
+                    iconColor: Colors.orange,
+                  ),
                   SizedBox(height: 12),
-                  StatTile(icon: Icons.access_time, label: "Hours Worked", value: "0", iconColor: Colors.blueAccent),
+                  StatTile(
+                    icon: Icons.access_time,
+                    label: "Hours Worked",
+                    value: "0",
+                    iconColor: Colors.blueAccent,
+                  ),
                 ],
               ),
             ),
@@ -226,7 +242,12 @@ class StatTile extends StatelessWidget {
   final String value;
   final Color iconColor;
 
-  const StatTile({required this.icon, required this.label, required this.value, required this.iconColor});
+  const StatTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.iconColor,
+  });
 
   @override
   Widget build(BuildContext context) {
