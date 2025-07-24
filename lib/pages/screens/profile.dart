@@ -67,23 +67,28 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               actions: [
                                 TextButton(
+                                  child: Text('Clear'),
+                                  onPressed: () {
+                                    bubbleController.clear();
+                                    Navigator.pop(context, ''); // Return empty string
+                                  },
+                                ),
+                                TextButton(
                                   onPressed: () => Navigator.pop(context),
                                   child: Text('Cancel'),
                                 ),
                                 ElevatedButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, bubbleController.text.trim()),
+                                  onPressed: () => Navigator.pop(context, bubbleController.text.trim()),
                                   child: Text('Save'),
                                 ),
                               ],
                             ),
                           );
-                          if (text != null && text.isNotEmpty) {
-                            setState(() {
-                              bubbleText = text.length > 20 ? text.substring(0, 20) : text;
-                            });
-                            bubbleController.clear();
-                          }
+                          // Accept both normal save and clear
+                          setState(() {
+                            bubbleText = text ?? bubbleText;
+                          });
+                          bubbleController.clear();
                         },
                         child: BubbleThought(
                           text: bubbleText,
@@ -161,8 +166,8 @@ class BubbleThought extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final int fixedCharCount = 4;
-    final double minWidth = text.length * charWidth + 24; // for < 4 chars
-    final double fixedWidth = charWidth * fixedCharCount + 24; // for 4+ chars
+    final double minWidth = text.length * charWidth + 24; // for <4 chars
+    final double fixedWidth = charWidth * fixedCharCount + 24; // for ≥4 chars
     final bool needsMarquee = text.length > fixedCharCount;
 
     final double bubbleWidth = text.isEmpty
