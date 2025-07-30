@@ -18,6 +18,7 @@ class _SignUpState extends State<SignUp> {
   final FocusNode _passwordNode = FocusNode();
   final TextEditingController retypePassword = TextEditingController();
   final FocusNode _retypePasswordNode = FocusNode();
+  final TextEditingController username = TextEditingController();
 
   @override
   void dispose() {
@@ -25,6 +26,7 @@ class _SignUpState extends State<SignUp> {
     password.dispose();
     _passwordNode.dispose();
     retypePassword.dispose();
+    username.dispose();
     _retypePasswordNode.dispose();
     super.dispose();
   }
@@ -36,7 +38,7 @@ class _SignUpState extends State<SignUp> {
   Future<void> Goto() async {
     if (passwordConfirmed()) {
       try {
-        await AuthService.signUpWithEmail(email.text.trim(), password.text.trim());
+        await AuthService.signUpWithEmail(email.text.trim(), password.text.trim(), username.text.trim());
         Get.toNamed('/home');
       } catch (e) {
         showDialog(
@@ -83,6 +85,19 @@ class _SignUpState extends State<SignUp> {
                           fontSize: 15,
                           color: Colors.blue,
                           fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Email Field
+                      TextField(
+                        controller: username,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),

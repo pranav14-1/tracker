@@ -9,18 +9,19 @@ class AuthService {
   static Future<UserCredential> signUpWithEmail(
     String email,
     String password,
+    String username,
   ) async {
     final credential = await auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
-    await saveUserData(credential.user!);
+    await saveUserData(credential.user!, username);
     return credential;
   }
 
-  static Future<void> saveUserData(User user) async {
+  static Future<void> saveUserData(User user, [String? username]) async {
     final userDoc = firestore.collection('Users').doc(user.uid);
-    final userData = {'uid': user.uid, 'email': user.email};
+    final userData = {'uid': user.uid, 'email': user.email, if(username != null) 'username' : username};
     await userDoc.set(
       userData,
       SetOptions(merge: true),

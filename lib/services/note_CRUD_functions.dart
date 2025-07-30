@@ -1,9 +1,7 @@
 // This file is used for the function of add, update and delete the notes
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:tracker/components/dialogBox.dart';
-import 'package:tracker/features/timer%20provider/timer_manager.dart';
 import 'package:tracker/firebase/notes/firestore.dart';
 import 'package:tracker/services/note_class/note.dart';
 

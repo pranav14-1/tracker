@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
@@ -13,6 +14,11 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController bubbleController = TextEditingController();
+
+  // Field for the username
+  String? username;
+  bool isLoadingUsername = false;
+
   String bubbleText = '';
 
   static const double _avatarRadius = 36;
@@ -23,6 +29,34 @@ class _ProfilePageState extends State<ProfilePage> {
   void dispose() {
     bubbleController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchUsername();
+  }
+
+  Future<void> fetchUsername() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final doc = await FirebaseFirestore.instance.collection('Users').doc(user.uid).get();
+    if (doc.exists) {
+      final data = doc.data();
+      // Assume username is always present in Firestore and non-null
+      setState(() {
+        username = data!['username'] as String;
+        isLoadingUsername = false;
+      });
+    } else {
+      // Edge case: If doc somehow doesn't exist, you can handle it by throwing or logging
+      setState(() {
+        username = '';
+        isLoadingUsername = false;
+      });
+    }
   }
 
   @override
@@ -44,7 +78,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     CircleAvatar(
                       radius: _avatarRadius,
                       backgroundColor: Colors.grey.shade300,
-                      child: Icon(Icons.person, size: 40, color: Colors.grey.shade700),
+                      child: Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Colors.grey.shade700,
+                      ),
                     ),
                     Positioned(
                       bottom: 0,
@@ -54,40 +92,52 @@ class _ProfilePageState extends State<ProfilePage> {
                           bubbleController.text = bubbleText;
                           final text = await showDialog<String>(
                             context: context,
-                            builder: (dialogCtx) => StatefulBuilder(
-                              builder: (ctx, setStateDialog) => AlertDialog(
-                                title: Text('Set Thought Bubble'),
-                                content: TextField(
-                                  controller: bubbleController,
-                                  autofocus: true,
-                                  maxLength: 20,
-                                  decoration: InputDecoration(
-                                    hintText: "Your thought… (max 20 chars)",
-                                    counterText: "",
-                                    suffixIcon: bubbleController.text.isNotEmpty
-                                        ? IconButton(
-                                            icon: Icon(Icons.clear),
-                                            onPressed: () {
-                                              bubbleController.clear();
-                                              setStateDialog(() {}); // for dialog's UI
-                                            },
-                                          )
-                                        : null,
-                                  ),
-                                  onChanged: (_) => setStateDialog(() {}),
+                            builder:
+                                (dialogCtx) => StatefulBuilder(
+                                  builder:
+                                      (ctx, setStateDialog) => AlertDialog(
+                                        title: Text('Set Thought Bubble'),
+                                        content: TextField(
+                                          controller: bubbleController,
+                                          autofocus: true,
+                                          maxLength: 20,
+                                          decoration: InputDecoration(
+                                            hintText:
+                                                "Your thought… (max 20 chars)",
+                                            counterText: "",
+                                            suffixIcon:
+                                                bubbleController.text.isNotEmpty
+                                                    ? IconButton(
+                                                      icon: Icon(Icons.clear),
+                                                      onPressed: () {
+                                                        bubbleController
+                                                            .clear();
+                                                        setStateDialog(
+                                                          () {},
+                                                        ); // for dialog's UI
+                                                      },
+                                                    )
+                                                    : null,
+                                          ),
+                                          onChanged:
+                                              (_) => setStateDialog(() {}),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx),
+                                            child: Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed:
+                                                () => Navigator.pop(
+                                                  ctx,
+                                                  bubbleController.text.trim(),
+                                                ),
+                                            child: Text('Save'),
+                                          ),
+                                        ],
+                                      ),
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: Text('Cancel'),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.pop(ctx, bubbleController.text.trim()),
-                                    child: Text('Save'),
-                                  ),
-                                ],
-                              ),
-                            ),
                           );
                           if (text != null) {
                             setState(() {
@@ -111,20 +161,29 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Your Name',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                        isLoadingUsername ? 'Loading...' : (username ?? 'Loading..'),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       SizedBox(height: 3),
                       Text(
                         user?.email ?? user?.phoneNumber ?? "No user info",
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                        ),
                       ),
                       SizedBox(height: 10),
                       Row(
                         children: [
                           Icon(Icons.group, size: 16, color: Colors.green),
                           SizedBox(width: 5),
-                          Text('Friends: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                            'Friends: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           Text('0', style: TextStyle(fontSize: 14)),
                         ],
                       ),
@@ -186,9 +245,10 @@ class BubbleThought extends StatelessWidget {
     final double fixedWidth = charWidth * fixedCharCount + 24; // for ≥4 chars
     final bool needsMarquee = text.length > fixedCharCount;
 
-    final double bubbleWidth = text.isEmpty
-        ? 40
-        : (text.length < fixedCharCount ? minWidth : fixedWidth);
+    final double bubbleWidth =
+        text.isEmpty
+            ? 40
+            : (text.length < fixedCharCount ? minWidth : fixedWidth);
 
     final textStyle = TextStyle(
       color: Colors.white,
@@ -205,33 +265,30 @@ class BubbleThought extends StatelessWidget {
         color: Colors.blueAccent,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 4,
-            offset: Offset(2, 2),
-          ),
+          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(2, 2)),
         ],
       ),
-      child: text.isEmpty
-          ? Icon(Icons.add_comment, color: Colors.white, size: 16)
-          : needsMarquee
+      child:
+          text.isEmpty
+              ? Icon(Icons.add_comment, color: Colors.white, size: 16)
+              : needsMarquee
               ? Marquee(
-                  text: text,
-                  style: textStyle,
-                  scrollAxis: Axis.horizontal,
-                  blankSpace: 16,
-                  velocity: 20.0,
-                  pauseAfterRound: Duration(seconds: 1),
-                  startPadding: 5,
-                  accelerationDuration: Duration(seconds: 1),
-                  decelerationDuration: Duration(seconds: 1),
-                )
+                text: text,
+                style: textStyle,
+                scrollAxis: Axis.horizontal,
+                blankSpace: 16,
+                velocity: 20.0,
+                pauseAfterRound: Duration(seconds: 1),
+                startPadding: 5,
+                accelerationDuration: Duration(seconds: 1),
+                decelerationDuration: Duration(seconds: 1),
+              )
               : Text(
-                  text,
-                  style: textStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                text,
+                style: textStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
     );
   }
 }
@@ -255,7 +312,10 @@ class StatTile extends StatelessWidget {
       children: [
         Icon(icon, color: iconColor, size: 18),
         SizedBox(width: 7),
-        Text('$label: ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        Text(
+          '$label: ',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
         Text(value, style: TextStyle(fontSize: 15)),
       ],
     );
