@@ -5,7 +5,7 @@ enum TimerMode { countdown, counter }
 
 class TimerProvider extends ChangeNotifier {
   final TimerMode mode;
-  final Duration initialDuration;
+  Duration initialDuration;
 
   Duration _remaining;
   int _elapsed = 0;
@@ -30,6 +30,16 @@ class TimerProvider extends ChangeNotifier {
       const cycle = 50 * 60;
       return (elapsed % cycle) / cycle;
     }
+  }
+
+  void updateDuration(Duration newDuration) {
+    _timer?.cancel();
+    initialDuration = newDuration;
+    _remaining = newDuration;
+    _elapsed = 0;
+    _isRunning = false;
+    _isPaused = false;
+    notifyListeners();
   }
 
   void start() {

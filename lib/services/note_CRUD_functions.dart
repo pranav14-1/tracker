@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:tracker/components/dialogBox.dart';
+import 'package:tracker/features/timer%20provider/timer_manager.dart';
+import 'package:tracker/features/timer%20provider/timer_provider.dart';
 import 'package:tracker/firebase/notes/firestore.dart';
 import 'package:tracker/services/note_class/note.dart';
 
@@ -47,10 +49,9 @@ void editHabitBox({
   required int? totalDuration,
   required TaskDialogParams params,
 }) {
-  // set the controller's text to the current note's name
+  // Set the controller's text to the current note's values
   params.noteController.text = noteText;
-  params.durationController.text =
-      totalDuration != null ? (totalDuration ~/ 60).toString() : '';
+  params.durationController.text = totalDuration != null ? (totalDuration ~/ 60).toString() : '';
 
   showDialog(
     context: params.context,
@@ -58,11 +59,25 @@ void editHabitBox({
       return TaskDialog(
         noteController: params.noteController,
         durationController: params.durationController,
-        onAdd: () {
+        onAdd: () async {
           final note = params.noteController.text.trim();
           final durationText = params.durationController.text.trim();
           final durationMins = int.tryParse(durationText);
-          fireStoreService.updateNotes(docID, note, durationMins);
+
+          // Update Firestore
+          await fireStoreService.updateNotes(docID, note, durationMins);
+
+          // --- Update the TimerProvider duration (if provided) ---
+          if (durationMins != null) {
+            final totalSeconds = durationMins * 60;
+            TimerProvider provider = TimerManager.get(
+              docID,
+              TimerMode.countdown,
+              Duration(seconds: totalSeconds),
+            );
+            provider.updateDuration(Duration(seconds: totalSeconds));
+          }
+
           Navigator.pop(context);
         },
         onCancel: Navigator.of(context).pop,
@@ -71,6 +86,7 @@ void editHabitBox({
     },
   );
 }
+
 
 void deleteHabitBox(String docID) {
   fireStoreService.deleteNote(docID);

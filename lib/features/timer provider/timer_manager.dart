@@ -11,6 +11,9 @@ class TimerManager {
   }
 
   static void remove(String docID) {
-    _providers.remove(docID);
+    if (_providers.containsKey(docID)) {
+      _providers[docID]!.dispose();
+      _providers.remove(docID);
+    }
   }
 }
